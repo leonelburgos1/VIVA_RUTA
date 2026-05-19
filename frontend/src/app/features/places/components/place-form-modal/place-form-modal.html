@@ -1,0 +1,185 @@
+<div class="modal-overlay">
+
+  <div class="modal-container">
+
+    <button
+      class="close-btn"
+      (click)="closeModal()">
+
+      <lucide-angular
+        [img]="X"
+        class="close-icon">
+      </lucide-angular>
+
+    </button>
+
+    <h2>
+      Crear Nuevo Lugar
+    </h2>
+
+    <form
+      [formGroup]="placeForm"
+      (ngSubmit)="createPlace()">
+
+      <div class="form-group">
+
+        <label>
+          Nombre del lugar *
+        </label>
+
+        <input
+          type="text"
+          formControlName="title"
+        />
+
+      </div>
+
+      <div class="double-grid">
+
+        <div class="form-group">
+
+          <label>
+            Ubicación *
+          </label>
+
+          <div class="select-wrapper">
+
+            <select formControlName="location">
+
+              <option value="">
+                Selecciona ubicación
+              </option>
+
+              @for (item of municipalities; track item) {
+
+                <option [value]="item">
+                  {{ item }}
+                </option>
+
+              }
+
+            </select>
+
+          </div>
+
+        </div>
+
+        <div class="form-group">
+
+          <label>
+            Categoría *
+          </label>
+
+          <div class="select-wrapper">
+
+            <select formControlName="category">
+
+              <option value="">
+                Selecciona categoría
+              </option>
+
+              @for (item of categories; track item) {
+
+                <option [value]="item">
+                  {{ item }}
+                </option>
+
+              }
+
+            </select>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="form-group">
+
+        <label>
+          Descripción corta *
+        </label>
+
+        <input
+          type="text"
+          formControlName="short_description"
+        />
+
+      </div>
+
+      <div class="form-group">
+
+        <label>
+          Descripción completa *
+        </label>
+
+        <textarea
+          rows="5"
+          formControlName="full_description">
+        </textarea>
+
+      </div>
+
+      <div class="form-group">
+
+        <label>
+          Dirección *
+        </label>
+
+        <input
+          type="text"
+          formControlName="address"
+        />
+
+      </div>
+
+      <div class="form-group">
+
+        <label>
+          Características
+        </label>
+
+        <input
+          type="text"
+          formControlName="features"
+        />
+
+      </div>
+
+      <div class="form-group">
+
+        <label>
+          URL de imagen
+        </label>
+
+        <input
+          type="file"
+          (change)="onFileSelected($event)"
+        >
+
+      </div>
+
+      <div class="actions">
+
+        <button
+          type="button"
+          class="cancel-btn"
+          (click)="closeModal()">
+
+          Cancelar
+
+        </button>
+
+        <button
+          type="submit"
+          class="submit-btn">
+          Crear Lugar
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+</div>

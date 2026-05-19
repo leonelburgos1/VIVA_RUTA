@@ -1,0 +1,228 @@
+<app-navbar />
+
+<section class="place-hero">
+
+  <img
+    [src]="place.image"
+    [alt]="place.title"
+  />
+
+  <div class="overlay"></div>
+
+  <button class="back-btn">
+
+    <lucide-angular
+      [img]="ChevronLeft"
+      class="icon">
+    </lucide-angular>
+
+    Volver
+
+  </button>
+
+</section>
+
+<section class="detail-wrapper">
+
+  <div class="detail-grid">
+
+    <div class="left-content">
+
+      <div class="place-tags">
+
+        <span class="category">
+          {{ place.category }}
+        </span>
+
+        <span class="location-tag">
+
+          <lucide-angular
+            [img]="MapPin"
+            class="small-icon">
+          </lucide-angular>
+
+          {{ place.location }}
+
+        </span>
+
+      </div>
+
+      <div class="title-row">
+
+        <h1>
+            {{ place.title }}
+        </h1>
+
+        <div class="admin-actions">
+
+            <button class="edit-btn">
+
+                <lucide-angular
+                    [img]="Pencil"
+                    class="action-icon">
+                </lucide-angular>
+
+                Editar
+
+                </button>
+
+                <button class="delete-btn">
+
+                <lucide-angular
+                    [img]="Trash2"
+                    class="action-icon">
+                </lucide-angular>
+
+                Eliminar
+
+                </button>
+
+        </div>
+
+        </div>
+
+      <div class="rating-row">
+
+        <lucide-angular
+          [img]="Star"
+          class="star-icon">
+        </lucide-angular>
+
+        <span>
+          {{ place.rating }}
+        </span>
+
+        <p>
+          (1 reseña)
+        </p>
+
+      </div>
+
+      <div class="content-card">
+
+        <h2>
+          Descripción
+        </h2>
+
+        <p>
+          {{ place.description }}
+        </p>
+
+      </div>
+
+      <div class="content-card">
+
+        <h2>
+          Características
+        </h2>
+
+        <div class="features-grid">
+
+          @for (feature of place.features; track feature) {
+
+            <div class="feature-item">
+
+              <span class="dot"></span>
+
+              {{ feature }}
+
+            </div>
+
+          }
+
+        </div>
+
+      </div>
+
+      <div class="content-card">
+
+        <h2>
+          Ubicación
+        </h2>
+
+        <div class="location-box">
+
+          <lucide-angular
+            [img]="MapPin"
+            class="map-icon">
+          </lucide-angular>
+
+          <div>
+
+            <h4>
+              Vereda El Encano, Pasto, Nariño
+            </h4>
+
+            <p>
+              Coordenadas: 1.1127, -77.1489
+            </p>
+
+          </div>
+
+        </div>
+
+        <div class="fake-map">
+
+          <lucide-angular
+            [img]="MapPin"
+            class="map-center">
+          </lucide-angular>
+
+          <span>
+            Mapa de ubicación
+          </span>
+
+        </div>
+
+      </div>
+
+      <div class="content-card">
+
+        <h2>
+          Reseñas (1)
+        </h2>
+
+        <div class="review-item">
+
+          <img
+            src="https://randomuser.me/api/portraits/women/44.jpg"
+            alt="user"
+          />
+
+          <div class="review-content">
+
+            <div class="review-top">
+
+              <div>
+
+                <h4>
+                  María González
+                </h4>
+
+                <div class="stars">
+                  ★★★★★
+                </div>
+
+              </div>
+
+              <span>
+                14/4/2026
+              </span>
+
+            </div>
+
+            <p>
+              Lugar mágico, los paisajes son increíbles y el aire puro es refrescante.
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>

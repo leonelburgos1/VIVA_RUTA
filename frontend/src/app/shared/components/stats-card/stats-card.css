@@ -1,0 +1,40 @@
+.stats-card {
+
+  background:
+    rgba(255,255,255,0.12);
+
+  backdrop-filter: blur(18px);
+
+  border:
+    1px solid rgba(255,255,255,0.15);
+
+  border-radius: 28px;
+
+  padding: 40px;
+
+  min-width: 240px;
+
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.08);
+}
+
+.stats-card h3 {
+
+  font-size: 54px;
+
+  color: white;
+
+  margin-bottom: 12px;
+
+  font-weight: 800;
+}
+
+.stats-card p {
+
+  color:
+    rgba(255,255,255,0.85);
+
+  font-size: 18px;
+
+  line-height: 1.5;
+}

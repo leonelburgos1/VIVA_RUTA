@@ -1,0 +1,170 @@
+.categories {
+
+  width: 100%;
+
+  padding: 35px 80px 40px;
+
+  background: #f8fafc;
+}
+
+.categories-header {
+
+  text-align: center;
+
+  margin-bottom: 30px;
+}
+
+.categories-header h2 {
+
+  font-size: 56px;
+
+  color: var(--primary-dark);
+
+  font-weight: 700;
+
+  margin-bottom: px;
+}
+
+.categories-header p {
+
+  font-size: 22px;
+
+  color: #64748b;
+}
+
+.categories-grid {
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(6, 1fr);
+
+  gap: 24px;
+}
+
+.category-card {
+
+  background: white;
+
+  border-radius: 28px;
+
+  padding: 36px 20px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 20px;
+
+  cursor: pointer;
+
+  transition: all 0.35s ease;
+
+  border: 2px solid transparent;
+
+  box-shadow:
+    0 10px 30px rgba(0,0,0,0.05);
+}
+
+.category-card:hover {
+
+  transform:
+    translateY(-8px);
+
+  border-color:
+    rgba(77, 110, 32, 0.4);
+
+  box-shadow:
+    0 20px 50px rgba(0,0,0,0.08);
+}
+
+.icon-wrapper {
+
+  width: 70px;
+
+  height: 70px;
+
+  border-radius: 22px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+}
+
+.category-icon {
+
+  width: 34px;
+
+  height: 34px;
+
+  stroke-width: 2.2;
+}
+
+.category-card span {
+
+  font-size: 22px;
+
+  font-weight: 700;
+
+  color: var(--primary-dark);
+}
+
+.nature {
+
+  background:
+    rgba(106,143,58,0.15);
+
+  color:
+    var(--primary-green);
+}
+
+.culture {
+
+  background:
+    rgba(168,85,247,0.12);
+
+  color:
+    #8b5cf6;
+}
+
+.adventure {
+
+  background:
+    rgba(45,111,126,0.15);
+
+  color:
+    var(--primary-blue);
+}
+
+.food {
+
+  background:
+    rgba(244,114,182,0.12);
+
+  color:
+    #ec4899;
+}
+
+.beach {
+
+  background:
+    rgba(59,130,246,0.12);
+
+  color:
+    #3b82f6;
+}
+
+.religion {
+
+  background:
+    rgba(249,115,22,0.12);
+
+  color:
+    #f97316;
+}

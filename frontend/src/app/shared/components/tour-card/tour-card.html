@@ -1,0 +1,43 @@
+<div class="tour-card">
+
+  <div class="image-container">
+
+    <img
+      [src]="image"
+      [alt]="title"
+    >
+
+    <div class="rating">
+
+      ⭐ {{ rating }}
+
+    </div>
+
+  </div>
+
+  <div class="tour-content">
+
+    <h3>
+      {{ title }}
+    </h3>
+
+    <div class="location">
+
+      📍 {{ location }}
+
+    </div>
+    <div class="tour-footer">
+      <div>
+        <h2>
+          ${{ price | number }}
+        </h2>
+        <span>
+          {{ duration }}
+        </span>
+      </div>
+      <div class="spots">
+        {{ spots }} cupos
+      </div>
+    </div>
+  </div>
+</div>

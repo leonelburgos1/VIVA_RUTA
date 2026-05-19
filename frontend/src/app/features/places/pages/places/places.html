@@ -1,0 +1,78 @@
+<app-navbar />
+
+<section class="places-hero">
+
+  <div class="overlay"></div>
+
+  <div class="hero-content">
+
+    <h1>
+      Descubre Lugares
+    </h1>
+
+    <p>
+      Explora los destinos más hermosos de Nariño
+    </p>
+
+  </div>
+
+</section>
+
+<section class="places-container">
+
+  <div class="top-actions">
+
+<button
+  class="create-btn"
+  (click)="openCreateModal()">
+
+  +
+
+  Crear Lugar
+
+</button>
+
+  </div>
+
+  <app-place-filters />
+
+@if (showCreateModal) {
+
+  <app-place-form-modal
+    (close)="closeCreateModal()"
+  />
+
+}
+
+  <div class="places-header">
+
+    <span>
+      6 lugares encontrados
+    </span>
+
+    <button class="sort-btn">
+      Ordenar
+    </button>
+
+  </div>
+
+  <div class="places-grid">
+
+    @for (place of places; track place.id) {
+
+      <app-place-card
+        [id]="place.id"
+        [title]="place.title"
+        [location]="place.location"
+        [image]="place.image"
+        [description]="place.short_description"
+        [category]="place.category"
+        [rating]="place.rating"
+
+      />
+
+    }
+
+  </div>
+
+</section>
