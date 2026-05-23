@@ -78,10 +78,10 @@
                 Selecciona categoría
               </option>
 
-              @for (item of categories; track item) {
+              @for (item of categories; track item.value) {
 
-                <option [value]="item">
-                  {{ item }}
+                <option [value]="item.value">
+                  {{ item.label }}
                 </option>
 
               }

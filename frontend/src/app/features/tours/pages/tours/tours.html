@@ -1,0 +1,71 @@
+<app-navbar></app-navbar>
+
+<section class="tours-hero">
+  <div class="overlay"></div>
+  <div class="hero-content">
+    <h1>Tours y Experiencias</h1>
+    <p>Vive aventuras inolvidables en los mejores destinos de Nariño</p>
+  </div>
+</section>
+
+<section class="tours-container">
+
+  <div class="top-actions">
+    <button
+      class="create-btn"
+      (click)="openCreateModal()">
+      <lucide-angular [img]="Plus" class="btn-icon"></lucide-angular>
+      Crear Tour
+    </button>
+  </div>
+
+  <div class="search-card">
+    <div class="search-input">
+      <lucide-angular [img]="Search" class="search-icon"></lucide-angular>
+      <input
+        type="text"
+        placeholder="Buscar tours..."
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="applyFilters()"
+      />
+    </div>
+
+    <button class="filter-btn" type="button">
+      <lucide-angular [img]="SlidersHorizontal" class="filter-icon"></lucide-angular>
+      Filtros
+    </button>
+  </div>
+
+  @if (showCreateModal) {
+    <app-tour-form-modal (close)="closeCreateModal($event)"></app-tour-form-modal>
+  }
+
+  <div class="tours-header">
+    <span>{{ filteredTours.length }} tour{{ filteredTours.length !== 1 ? 's' : '' }} disponible{{ filteredTours.length !== 1 ? 's' : '' }}</span>
+  </div>
+
+  <div class="tours-grid">
+    @if (loadingTours) {
+      <p class="state-text">Cargando tours...</p>
+    } @else if (filteredTours.length === 0) {
+      <p class="state-text">No encontramos tours con esos criterios.</p>
+    } @else {
+      @for (tour of filteredTours; track tour.id) {
+        <app-tour-card
+          [id]="tour.id"
+          [slug]="tour.slug"
+          [title]="tour.title"
+          [location]="tour.place_location"
+          [description]="tour.description"
+          [image]="tour.image_url || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb'"
+          [price]="tour.price"
+          [duration]="tour.duration"
+          [spots]="tour.max_spots"
+          [rating]="tour.rating"
+        >
+        </app-tour-card>
+      }
+    }
+  </div>
+
+</section>

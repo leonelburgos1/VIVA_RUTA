@@ -1,0 +1,164 @@
+<app-navbar></app-navbar>
+
+@if (loading) {
+  <div class="state-wrapper">
+    <p>Cargando tour...</p>
+  </div>
+}
+
+@if (!loading && tour) {
+  <section class="detail-hero">
+    <img
+      [src]="tour.image_url || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb'"
+      [alt]="tour.title"
+    />
+    <div class="hero-overlay"></div>
+
+    <div class="hero-content">
+      <button class="back-btn" (click)="goBack()">
+        <lucide-angular [img]="ChevronLeft" class="back-icon"></lucide-angular>
+        Volver
+      </button>
+
+      <div class="hero-chip">
+        <lucide-angular [img]="MapPin" class="chip-icon"></lucide-angular>
+        {{ tour.place_name }}
+      </div>
+
+      <h1>{{ tour.title }}</h1>
+
+      <div class="hero-rating">
+        <lucide-angular [img]="Star" class="rating-icon"></lucide-angular>
+        {{ tour.rating }}
+      </div>
+    </div>
+  </section>
+
+  <section class="detail-wrapper">
+    <div class="detail-layout">
+      <div class="detail-main">
+
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <lucide-angular [img]="Clock3" class="metric-icon"></lucide-angular>
+            <strong>{{ tour.duration }}</strong>
+            <span>Duración</span>
+          </div>
+
+          <div class="metric-card">
+            <lucide-angular [img]="Users" class="metric-icon"></lucide-angular>
+            <strong>{{ tour.max_spots }}</strong>
+            <span>Cupos disponibles</span>
+          </div>
+
+          <div class="metric-card">
+            <lucide-angular [img]="Calendar" class="metric-icon"></lucide-angular>
+            <strong>${{ tour.price | number }}</strong>
+            <span>Por persona</span>
+          </div>
+        </div>
+
+        <div class="content-card">
+          <h2>Descripción del Tour</h2>
+          <p>{{ tour.description }}</p>
+        </div>
+
+        @if (tour.includes.length > 0) {
+          <div class="content-card">
+            <h2>Incluye</h2>
+
+            <div class="includes-grid">
+              @for (item of tour.includes; track item) {
+                <div class="include-item">
+                  <span class="include-check">✓</span>
+                  {{ item }}
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <div class="content-card">
+          <h2>Horario</h2>
+
+          <div class="schedule-box">
+            <lucide-angular [img]="Calendar" class="info-icon"></lucide-angular>
+            <span>{{ tour.schedule }}</span>
+          </div>
+        </div>
+
+        <div class="content-card">
+          <h2>Sobre el Lugar</h2>
+
+          <div class="place-card">
+            <img
+              [src]="tour.image_url || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb'"
+              [alt]="tour.place_name"
+            />
+
+            <div class="place-copy">
+              <h3>{{ tour.place_name }}</h3>
+              <div class="place-location">
+                <lucide-angular [img]="MapPin" class="info-icon"></lucide-angular>
+                <span>{{ tour.place_location }}</span>
+              </div>
+
+              <p>{{ tour.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="booking-card">
+        <h2>Reserva tu Experiencia</h2>
+
+        <div class="form-group">
+          <label>Fecha</label>
+          <input
+            type="date"
+            [(ngModel)]="selectedDate"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Número de personas</label>
+          <input
+            type="number"
+            min="1"
+            [max]="tour.max_spots"
+            [(ngModel)]="peopleCount"
+          />
+        </div>
+
+        <div class="price-summary">
+          <div class="summary-row">
+            <span>${{ tour.price | number }} x {{ peopleCount }}</span>
+            <strong>${{ totalPrice | number }}</strong>
+          </div>
+
+          <div class="summary-divider"></div>
+
+          <div class="summary-total">
+            <span>Total</span>
+            <strong>${{ totalPrice | number }}</strong>
+          </div>
+        </div>
+
+        <button class="reserve-btn" type="button">
+          Reservar ahora
+        </button>
+
+        <p class="booking-note">
+          Confirmación inmediata. Cancela hasta 24h antes.
+        </p>
+      </aside>
+    </div>
+  </section>
+}
+
+@if (!loading && !tour) {
+  <div class="state-wrapper">
+    <h2>Tour no encontrado</h2>
+    <button class="empty-btn" (click)="goBack()">Volver a tours</button>
+  </div>
+}

@@ -56,6 +56,13 @@
   margin-top: 40px;
 }
 
+.places-state {
+
+  font-size: 20px;
+
+  color: #475569;
+}
+
 .experience-content span {
 
   color: var(--primary-green);

@@ -1,78 +1,52 @@
-<app-navbar />
+<app-navbar></app-navbar>
 
 <section class="places-hero">
-
   <div class="overlay"></div>
-
   <div class="hero-content">
-
-    <h1>
-      Descubre Lugares
-    </h1>
-
-    <p>
-      Explora los destinos más hermosos de Nariño
-    </p>
-
+    <h1>Descubre Lugares</h1>
+    <p>Explora los destinos más hermosos de Nariño</p>
   </div>
-
 </section>
 
 <section class="places-container">
 
   <div class="top-actions">
-
-<button
-  class="create-btn"
-  (click)="openCreateModal()">
-
-  +
-
-  Crear Lugar
-
-</button>
-
+    <button class="create-btn" (click)="openCreateModal()">
+      + Crear Lugar
+    </button>
   </div>
 
-  <app-place-filters />
+  <app-place-filters></app-place-filters>
 
-@if (showCreateModal) {
-
-  <app-place-form-modal
-    (close)="closeCreateModal()"
-  />
-
-}
+  @if (showCreateModal) {
+    <app-place-form-modal (close)="closeCreateModal()" />
+  }
 
   <div class="places-header">
-
+    <!-- ✅ contador dinámico -->
     <span>
-      6 lugares encontrados
+      {{ places.length }} lugar{{ places.length !== 1 ? 'es' : '' }} encontrado{{ places.length !== 1 ? 's' : '' }}
     </span>
-
-    <button class="sort-btn">
-      Ordenar
-    </button>
-
+    <button class="sort-btn">Ordenar</button>
   </div>
 
   <div class="places-grid">
-
     @for (place of places; track place.id) {
-
+      <!-- ✅ usa image_url (URL absoluta) y slug para navegar -->
       <app-place-card
         [id]="place.id"
+        [slug]="place.slug"
         [title]="place.title"
         [location]="place.location"
-        [image]="place.image"
+        [image]="place.image_url"
         [description]="place.short_description"
         [category]="place.category"
+        [categoryLabel]="place.category_label"
+        [features]="place.features"
         [rating]="place.rating"
-
-      />
-
+      >
+      </app-place-card>
     }
-
   </div>
 
 </section>

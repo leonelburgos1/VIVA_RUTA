@@ -13,46 +13,27 @@
   </div>
 
   <div class="tours-grid">
-
-    <app-tour-card
-
-      [id]="1"
-
-      title="Tour Laguna de La Cocha y La Corota"
-
-      location="Laguna de La Cocha"
-
-      image="https://images.unsplash.com/photo-1506744038136-46273834b3fb"
-
-      [price]="80000"
-
-      duration="6 horas"
-
-      [spots]="7"
-
-      [rating]="4.8"
-
-    />
-
-    <app-tour-card
-
-      [id]="2"
-
-      title="Peregrinación al Santuario de Las Lajas"
-
-      location="Santuario de Las Lajas"
-
-      image="https://images.unsplash.com/photo-1515377905703-c4788e51af15"
-
-      [price]="60000"
-
-      duration="5 horas"
-
-      [spots]="8"
-
-      [rating]="4.9"
-
-    />
+    @if (loadingTours) {
+      <p class="state-text">Cargando tours destacados...</p>
+    } @else if (tours.length === 0) {
+      <p class="state-text">Aún no hay tours disponibles.</p>
+    } @else {
+      @for (tour of tours; track tour.id) {
+        <app-tour-card
+          [id]="tour.id"
+          [slug]="tour.slug"
+          [title]="tour.title"
+          [location]="tour.place_name"
+          [description]="tour.description"
+          [image]="tour.image_url || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb'"
+          [price]="tour.price"
+          [duration]="tour.duration"
+          [spots]="tour.max_spots"
+          [rating]="tour.rating"
+        >
+        </app-tour-card>
+      }
+    }
 
   </div>
 

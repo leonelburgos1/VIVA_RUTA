@@ -17,7 +17,21 @@ import {
 import { X, ChevronDown } from 'lucide-angular';
 import { LucideAngularModule } from 'lucide-angular';
 import { PlaceService } from '../../services/place.service';
+import colombiaData from 'colombia-cities/colombia_completa.json';
 
+interface PlaceCategoryOption {
+  label: string;
+  value: string;
+}
+
+interface ColombiaDepartment {
+  nombre: string;
+  municipios: Array<{ nombre: string }>;
+}
+
+interface ColombiaDataFile {
+  departamentos: ColombiaDepartment[];
+}
 
 @Component({
   selector: 'app-place-form-modal',
@@ -43,9 +57,15 @@ export class PlaceFormModal {
   // ✅ Declarar selectedFile aquí
   selectedFile: File | null = null;
 
-  categories = ['Nature', 'Religious', 'Adventure', 'Culture', 'Beach'];
+  categories: PlaceCategoryOption[] = [
+    { label: 'Naturaleza', value: 'Nature' },
+    { label: 'Religioso', value: 'Religious' },
+    { label: 'Aventura', value: 'Adventure' },
+    { label: 'Cultura', value: 'Culture' },
+    { label: 'Playa', value: 'Beach' }
+  ];
 
-  municipalities = ['Pasto', 'Ipiales', 'Tumaco', 'La Cruz', 'Túquerres', 'Sandoná'];
+  municipalities = this.getNarinoMunicipalities();
 
   placeForm: FormGroup = this.fb.group({
     title: ['', Validators.required],
@@ -108,5 +128,20 @@ export class PlaceFormModal {
 
   closeModal(): void {
     this.close.emit();
+  }
+
+  private getNarinoMunicipalities(): string[] {
+    const data = colombiaData as ColombiaDataFile;
+    const narinoDepartment = data.departamentos.find(
+      (department) => department.nombre.toLowerCase() === 'nariño'
+    );
+
+    if (!narinoDepartment) {
+      return [];
+    }
+
+    return narinoDepartment.municipios
+      .map((city) => city.nombre)
+      .sort((a, b) => a.localeCompare(b, 'es'));
   }
 }

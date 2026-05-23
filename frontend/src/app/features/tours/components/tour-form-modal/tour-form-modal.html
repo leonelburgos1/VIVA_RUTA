@@ -1,0 +1,131 @@
+<div class="modal-overlay">
+
+  <div class="modal-container">
+
+    <button
+      class="close-btn"
+      (click)="closeModal()">
+      <lucide-angular
+        [img]="X"
+        class="close-icon">
+      </lucide-angular>
+    </button>
+
+    <h2>Crear Nuevo Tour</h2>
+
+    <form
+      [formGroup]="tourForm"
+      (ngSubmit)="createTour()">
+
+      <div class="form-group">
+        <label>Nombre del tour *</label>
+        <input
+          type="text"
+          placeholder="Ej: Tour Laguna de La Cocha"
+          formControlName="title"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Lugar asociado *</label>
+        <div class="select-wrapper">
+          <select formControlName="place">
+            <option value="">Selecciona un lugar</option>
+
+            @for (place of places; track place.id) {
+              <option [value]="place.id">
+                {{ place.title }} - {{ place.location }}
+              </option>
+            }
+          </select>
+          <lucide-angular [img]="ChevronDown" class="select-icon"></lucide-angular>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Descripción *</label>
+        <textarea
+          rows="4"
+          placeholder="Describe la experiencia del tour"
+          formControlName="description">
+        </textarea>
+      </div>
+
+      <div class="double-grid">
+        <div class="form-group">
+          <label>Precio (COP) *</label>
+          <input
+            type="number"
+            placeholder="80000"
+            formControlName="price"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Duración *</label>
+          <input
+            type="text"
+            placeholder="Ej: 6 horas"
+            formControlName="duration"
+          />
+        </div>
+      </div>
+
+      <div class="double-grid">
+        <div class="form-group">
+          <label>Cupos máximos *</label>
+          <input
+            type="number"
+            placeholder="15"
+            formControlName="max_spots"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Horario *</label>
+          <input
+            type="text"
+            placeholder="Salida 8:00 AM - Retorno 2:00 PM"
+            formControlName="schedule"
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Incluye *</label>
+        <textarea
+          rows="3"
+          placeholder="Separado por comas: Transporte, Guía, Almuerzo, Seguro"
+          formControlName="includes">
+        </textarea>
+      </div>
+
+      <div class="form-group">
+        <label>URL de imagen</label>
+        <input
+          type="text"
+          placeholder="https://ejemplo.com/imagen.jpg"
+          formControlName="image_url"
+        />
+      </div>
+
+      <div class="actions">
+        <button
+          type="button"
+          class="cancel-btn"
+          (click)="closeModal()">
+          Cancelar
+        </button>
+
+        <button
+          type="submit"
+          class="submit-btn">
+          Crear Tour
+        </button>
+      </div>
+
+    </form>
+
+  </div>
+
+</div>

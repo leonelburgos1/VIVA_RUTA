@@ -15,8 +15,7 @@
     </div>
 
     <div class="category-badge">
-
-      {{ category }}
+      {{ categoryBadge }}
 
     </div>
 
@@ -29,14 +28,23 @@
     </h3>
 
     <div class="location">
-
-      📍 {{ location }}
+      📍 {{ location }}, Nariño
 
     </div>
 
-    <p>
+    <p class="card-description">
       {{ description }}
     </p>
+
+    @if (features.length > 0) {
+      <div class="features-row">
+        @for (feature of features.slice(0, 3); track feature) {
+          <span class="feature-pill">
+            {{ feature }}
+          </span>
+        }
+      </div>
+    }
 
   </div>
 

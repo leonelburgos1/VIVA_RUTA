@@ -3,7 +3,8 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     UserViewSet,
     PlaceViewSet,
-    ReviewViewSet
+    ReviewViewSet,
+    TourViewSet
 )
 router = DefaultRouter()
 
@@ -15,5 +16,8 @@ router.register(
 )
 router.register(
     r'reviews',ReviewViewSet
+)
+router.register(
+    r'tours',TourViewSet
 )
 urlpatterns = router.urls

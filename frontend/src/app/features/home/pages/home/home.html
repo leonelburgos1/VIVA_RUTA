@@ -2,7 +2,7 @@
 
 <app-hero></app-hero>
 
-<app-categories />
+<app-categories></app-categories>
 
 <section class="featured-section">
 
@@ -19,68 +19,29 @@
   </div>
 
   <div class="places-grid">
-
-    <app-place-card
-
-      [id]="1"
-
-      title="Laguna de la Cocha"
-
-      location="Pasto, Nariño"
-
-      image="https://images.unsplash.com/photo-1506744038136-46273834b3fb"
-
-      description="Un destino natural rodeado de montañas, gastronomía y paisajes únicos."
-
-      category="Naturaleza"
-
-      [rating]="4.8"
-
-    >
-    </app-place-card>
-
-    <app-place-card
-
-      [id]="2"
-
-      title="Santuario Las Lajas"
-
-      location="Ipiales, Nariño"
-
-      image="https://images.unsplash.com/photo-1501785888041-af3ef285b470"
-
-      description="Una de las iglesias más hermosas del mundo construida sobre un cañón."
-
-      category="Religioso"
-
-      [rating]="4.9"
-
-    >
-    </app-place-card>
-
-    <app-place-card
-
-      [id]="3"
-
-      title="Volcán Galeras"
-
-      location="Pasto, Nariño"
-
-      image="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b"
-
-      description="Aventura, senderismo y vistas impresionantes en un entorno volcánico único."
-
-      category="Aventura"
-
-      [rating]="4.7"
-
-    >
-    </app-place-card>
-
-    
-
+    @if (loadingPlaces) {
+      <p class="places-state">Cargando lugares destacados...</p>
+    } @else if (places.length === 0) {
+      <p class="places-state">Aún no hay lugares disponibles.</p>
+    } @else {
+      @for (place of places; track place.id) {
+        <app-place-card
+          [id]="place.id"
+          [slug]="place.slug"
+          [title]="place.title"
+          [location]="place.location"
+          [image]="place.image_url"
+          [description]="place.short_description"
+          [category]="place.category"
+          [categoryLabel]="place.category_label"
+          [features]="place.features"
+          [rating]="place.rating"
+        >
+        </app-place-card>
+      }
+    }
   </div>
 
 </section>
 
-<app-featured-tours />
+<app-featured-tours></app-featured-tours>

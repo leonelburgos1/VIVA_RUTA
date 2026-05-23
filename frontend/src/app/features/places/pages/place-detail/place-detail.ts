@@ -1,85 +1,110 @@
-import { Component } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ChangeDetectorRef,
+  inject
+} from '@angular/core';
 
 import { CommonModule } from '@angular/common';
 
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { Navbar } from '../../../../shared/components/navbar/navbar';
 
-import { LucideAngularModule, Pencil, Trash2 } from 'lucide-angular';
-
-
 import {
+  ArrowRight,
+  Calendar,
+  LucideAngularModule,
+  Pencil,
+  Trash2,
   Star,
+  Clock3,
   MapPin,
   ChevronLeft
 } from 'lucide-angular';
 
+import { PlaceService } from '../../services/place.service';
+import { Place } from '../../../../core/models/place.model';
+
+
 @Component({
   selector: 'app-place-detail',
-
   standalone: true,
-
   imports: [
     CommonModule,
     Navbar,
     LucideAngularModule
   ],
-
   templateUrl: './place-detail.html',
-
   styleUrl: './place-detail.css'
 })
-
-export class PlaceDetail {
+export class PlaceDetail implements OnInit {
 
   readonly Pencil = Pencil;
-
   readonly Trash2 = Trash2;
-
   readonly Star = Star;
-
   readonly MapPin = MapPin;
-
   readonly ChevronLeft = ChevronLeft;
+  readonly ArrowRight = ArrowRight;
+  readonly Calendar = Calendar;
+  readonly Clock3 = Clock3;
 
-  place = {
+  place: Place | null = null;
+  loading = true;
 
-    id: 1,
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private placeService = inject(PlaceService);
+  private cdr = inject(ChangeDetectorRef);
 
-    title: 'Laguna de La Cocha',
+  ngOnInit(): void {
+    const slug = this.route.snapshot.paramMap.get('slug');
 
-    location: 'Pasto, Nariño',
+    if (slug) {
+      this.placeService.getPlaceBySlug(slug).subscribe({
+        next: (data) => {
+          this.place = data;
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Error cargando lugar:', err);
+          this.loading = false;
+          this.cdr.detectChanges();
+        }
+      });
+    } else {
+      this.loading = false;
+      this.cdr.detectChanges();
+    }
+  }
 
-    category: 'Naturaleza',
+  goBack(): void {
+    this.router.navigate(['/lugares']);
+  }
 
-    rating: 4.8,
+  goToTour(slug: string): void {
+    this.router.navigate(['/tours', slug]);
+  }
 
-    reviews: 124,
+  deletePlace(): void {
+    if (!this.place) return;
 
-    image:
-      'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
+    const confirmed = confirm(
+      `¿Estás seguro de que deseas eliminar "${this.place.title}"?`
+    );
+    if (!confirmed) return;
 
-    description:
-      'La Laguna de La Cocha es uno de los destinos turísticos más importantes de Nariño. Rodeada de montañas, naturaleza y paisajes increíbles.',
-
-    features: [
-      'Senderismo',
-      'Fotografía',
-      'Naturaleza',
-      'Paseos en lancha'
-    ]
-  };
-
-  constructor(
-    private route: ActivatedRoute
-  ) {
-
-    const id =
-      this.route.snapshot.paramMap.get('id');
-
-    console.log(id);
-
+    this.placeService.deletePlace(this.place.slug).subscribe({
+      next: () => {
+        alert('Lugar eliminado correctamente');
+        this.router.navigate(['/lugares']);
+      },
+      error: (err) => {
+        console.error('Error eliminando:', err);
+        alert('Hubo un error al eliminar el lugar');
+      }
+    });
   }
 
 }

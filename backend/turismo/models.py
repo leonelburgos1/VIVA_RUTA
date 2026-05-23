@@ -6,11 +6,11 @@ from django.utils.text import slugify
 class Place(models.Model):
 
     CATEGORY_CHOICES = [
-        ('Nature', 'Nature'),
-        ('Religious', 'Religious'),
-        ('Adventure', 'Adventure'),
-        ('Culture', 'Culture'),
-        ('Beach', 'Beach'),
+        ('Nature', 'Naturaleza'),
+        ('Religious', 'Religioso'),
+        ('Adventure', 'Aventura'),
+        ('Culture', 'Cultura'),
+        ('Beach', 'Playa'),
     ]
 
     title = models.CharField(max_length=150)
@@ -50,25 +50,26 @@ class Place(models.Model):
 
     updated_at = models.DateTimeField(auto_now=True)
 
-def save(self, *args, **kwargs):
+    # ✅ CORREGIDO: save() ahora está dentro de la clase (4 espacios de indentación)
+    def save(self, *args, **kwargs):
 
-    if not self.slug:
+        if not self.slug:
 
-        base_slug = slugify(self.title)
+            base_slug = slugify(self.title)
 
-        slug = base_slug
+            slug = base_slug
 
-        counter = 1
+            counter = 1
 
-        while Place.objects.filter(slug=slug).exists():
+            while Place.objects.filter(slug=slug).exists():
 
-            slug = f'{base_slug}-{counter}'
+                slug = f'{base_slug}-{counter}'
 
-            counter += 1
+                counter += 1
 
-        self.slug = slug
+            self.slug = slug
 
-    super().save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title
@@ -95,3 +96,67 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.place}"
+
+
+class Tour(models.Model):
+
+    title = models.CharField(max_length=180)
+
+    slug = models.SlugField(
+        unique=True,
+        blank=True
+    )
+
+    place = models.ForeignKey(
+        Place,
+        on_delete=models.CASCADE,
+        related_name='tours'
+    )
+
+    description = models.TextField()
+
+    price = models.PositiveIntegerField()
+
+    duration = models.CharField(max_length=80)
+
+    max_spots = models.PositiveIntegerField()
+
+    schedule = models.CharField(max_length=180)
+
+    includes = models.JSONField(
+        default=list,
+        blank=True
+    )
+
+    image_url = models.URLField(
+        blank=True
+    )
+
+    rating = models.FloatField(default=4.8)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+
+        if not self.slug:
+
+            base_slug = slugify(self.title)
+
+            slug = base_slug
+
+            counter = 1
+
+            while Tour.objects.filter(slug=slug).exists():
+
+                slug = f'{base_slug}-{counter}'
+
+                counter += 1
+
+            self.slug = slug
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.title

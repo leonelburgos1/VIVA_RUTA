@@ -1,4 +1,6 @@
-<div class="tour-card">
+<div
+  class="tour-card"
+  (click)="goToTour()">
 
   <div class="image-container">
 
@@ -26,18 +28,35 @@
       📍 {{ location }}
 
     </div>
+
+    <p class="tour-description">
+      {{ description }}
+    </p>
+
+    <div class="tour-meta">
+      <div class="meta-item">
+        <span class="meta-label">Duración</span>
+        <strong>{{ duration }}</strong>
+      </div>
+
+      <div class="meta-item meta-right">
+        <span class="meta-label">Disponibles</span>
+        <strong>{{ spots }} cupos</strong>
+      </div>
+    </div>
+
     <div class="tour-footer">
       <div>
         <h2>
           ${{ price | number }}
         </h2>
         <span>
-          {{ duration }}
+          Desde
         </span>
       </div>
-      <div class="spots">
-        {{ spots }} cupos
-      </div>
+      <button class="details-btn" type="button">
+        Ver detalles
+      </button>
     </div>
   </div>
 </div>

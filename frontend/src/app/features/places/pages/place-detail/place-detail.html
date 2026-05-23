@@ -1,228 +1,157 @@
-<app-navbar />
+<app-navbar></app-navbar>
 
-<section class="place-hero">
+@if (loading) {
+  <div style="text-align:center; padding:4rem;">
+    <p>Cargando lugar...</p>
+  </div>
+}
 
-  <img
-    [src]="place.image"
-    [alt]="place.title"
-  />
+@if (!loading && place) {
 
-  <div class="overlay"></div>
+  <section class="place-hero">
+    <img
+      [src]="place.image_url || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb'"
+      [alt]="place.title"
+    />
+    <div class="overlay"></div>
+    <button class="back-btn" (click)="goBack()">
+      <lucide-angular [img]="ChevronLeft" class="icon"></lucide-angular>
+      Volver
+    </button>
+  </section>
 
-  <button class="back-btn">
+  <section class="detail-wrapper">
+    <div class="detail-grid">
+      <div class="left-content">
 
-    <lucide-angular
-      [img]="ChevronLeft"
-      class="icon">
-    </lucide-angular>
-
-    Volver
-
-  </button>
-
-</section>
-
-<section class="detail-wrapper">
-
-  <div class="detail-grid">
-
-    <div class="left-content">
-
-      <div class="place-tags">
-
-        <span class="category">
-          {{ place.category }}
-        </span>
-
-        <span class="location-tag">
-
-          <lucide-angular
-            [img]="MapPin"
-            class="small-icon">
-          </lucide-angular>
-
-          {{ place.location }}
-
-        </span>
-
-      </div>
-
-      <div class="title-row">
-
-        <h1>
-            {{ place.title }}
-        </h1>
-
-        <div class="admin-actions">
-
-            <button class="edit-btn">
-
-                <lucide-angular
-                    [img]="Pencil"
-                    class="action-icon">
-                </lucide-angular>
-
-                Editar
-
-                </button>
-
-                <button class="delete-btn">
-
-                <lucide-angular
-                    [img]="Trash2"
-                    class="action-icon">
-                </lucide-angular>
-
-                Eliminar
-
-                </button>
-
-        </div>
-
-        </div>
-
-      <div class="rating-row">
-
-        <lucide-angular
-          [img]="Star"
-          class="star-icon">
-        </lucide-angular>
-
-        <span>
-          {{ place.rating }}
-        </span>
-
-        <p>
-          (1 reseña)
-        </p>
-
-      </div>
-
-      <div class="content-card">
-
-        <h2>
-          Descripción
-        </h2>
-
-        <p>
-          {{ place.description }}
-        </p>
-
-      </div>
-
-      <div class="content-card">
-
-        <h2>
-          Características
-        </h2>
-
-        <div class="features-grid">
-
-          @for (feature of place.features; track feature) {
-
-            <div class="feature-item">
-
-              <span class="dot"></span>
-
-              {{ feature }}
-
-            </div>
-
-          }
-
-        </div>
-
-      </div>
-
-      <div class="content-card">
-
-        <h2>
-          Ubicación
-        </h2>
-
-        <div class="location-box">
-
-          <lucide-angular
-            [img]="MapPin"
-            class="map-icon">
-          </lucide-angular>
-
-          <div>
-
-            <h4>
-              Vereda El Encano, Pasto, Nariño
-            </h4>
-
-            <p>
-              Coordenadas: 1.1127, -77.1489
-            </p>
-
-          </div>
-
-        </div>
-
-        <div class="fake-map">
-
-          <lucide-angular
-            [img]="MapPin"
-            class="map-center">
-          </lucide-angular>
-
-          <span>
-            Mapa de ubicación
+        <div class="place-tags">
+          <span class="category">{{ place.category_label }}</span>
+          <span class="location-tag">
+            <lucide-angular [img]="MapPin" class="small-icon"></lucide-angular>
+            {{ place.location }}
           </span>
+        </div>
 
+        <div class="title-row">
+          <h1>{{ place.title }}</h1>
+          <div class="admin-actions">
+            <button class="edit-btn">
+              <lucide-angular [img]="Pencil" class="action-icon"></lucide-angular>
+              Editar
+            </button>
+            <button class="delete-btn" (click)="deletePlace()">
+              <lucide-angular [img]="Trash2" class="action-icon"></lucide-angular>
+              Eliminar
+            </button>
+          </div>
+        </div>
+
+        <div class="rating-row">
+          <lucide-angular [img]="Star" class="star-icon"></lucide-angular>
+          <span>{{ place.rating }}</span>
+          <p>({{ place.reviews.length || 0 }} reseña{{ place.reviews.length !== 1 ? 's' : '' }})</p>
+        </div>
+
+        <div class="content-card">
+          <h2>Descripción</h2>
+          <p>{{ place.full_description }}</p>
+        </div>
+
+        @if (place.features && place.features.length > 0) {
+          <div class="content-card">
+            <h2>Características</h2>
+            <div class="features-grid">
+              @for (feature of place.features; track feature) {
+                <div class="feature-item">
+                  <span class="dot"></span>
+                  {{ feature }}
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <div class="content-card">
+          <h2>Ubicación</h2>
+          <div class="location-box">
+            <lucide-angular [img]="MapPin" class="map-icon"></lucide-angular>
+            <div>
+              <h4>{{ place.address }}</h4>
+              <p>{{ place.location }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="content-card">
+          <h2>Reseñas ({{ place.reviews.length || 0 }})</h2>
+
+          @if (place.reviews && place.reviews.length > 0) {
+            @for (review of place.reviews; track review.id) {
+              <div class="review-item">
+                <div class="review-content">
+                  <div class="review-top">
+                    <div>
+                      <h4>{{ review.user_name }}</h4>
+                      <div class="stars">
+                        @for (s of [1,2,3,4,5]; track s) {
+                          <span>{{ s <= review.rating ? '★' : '☆' }}</span>
+                        }
+                      </div>
+                    </div>
+                    <span>{{ review.created_at | date:'dd/MM/yyyy' }}</span>
+                  </div>
+                  <p>{{ review.comment }}</p>
+                </div>
+              </div>
+            }
+          } @else {
+            <p style="color:#999;">Aún no hay reseñas para este lugar.</p>
+          }
         </div>
 
       </div>
 
-      <div class="content-card">
+      <aside class="right-sidebar">
+        <div class="tour-card">
+          <h2>Tours Disponibles</h2>
 
-        <h2>
-          Reseñas (1)
-        </h2>
+          @if (place.tours.length > 0) {
+            @for (tour of place.tours; track tour.id) {
+              <button
+                class="tour-item"
+                type="button"
+                (click)="goToTour(tour.slug)">
+                <div class="tour-copy">
+                  <h3>{{ tour.title }}</h3>
 
-        <div class="review-item">
+                  <div class="tour-meta">
+                    <span>
+                      <lucide-angular [img]="Clock3" class="tour-meta-icon"></lucide-angular>
+                      {{ tour.duration }}
+                    </span>
+                  </div>
 
-          <img
-            src="https://randomuser.me/api/portraits/women/44.jpg"
-            alt="user"
-          />
-
-          <div class="review-content">
-
-            <div class="review-top">
-
-              <div>
-
-                <h4>
-                  María González
-                </h4>
-
-                <div class="stars">
-                  ★★★★★
+                  <strong>${{ tour.price | number }}</strong>
                 </div>
 
-              </div>
-
-              <span>
-                14/4/2026
-              </span>
-
-            </div>
-
-            <p>
-              Lugar mágico, los paisajes son increíbles y el aire puro es refrescante.
-            </p>
-
-          </div>
-
+                <lucide-angular [img]="ArrowRight" class="tour-arrow"></lucide-angular>
+              </button>
+            }
+          } @else {
+            <p class="empty-tours">Aún no hay tours registrados para este lugar.</p>
+          }
         </div>
-
-      </div>
-
+      </aside>
     </div>
+  </section>
 
+}
+
+@if (!loading && !place) {
+  <div style="text-align:center; padding:4rem;">
+    <h2>Lugar no encontrado</h2>
+    <button (click)="goBack()" style="margin-top:1rem; padding:0.5rem 1.5rem; cursor:pointer;">
+      Volver a lugares
+    </button>
   </div>
-
-</section>
+}
