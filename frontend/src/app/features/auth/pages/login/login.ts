@@ -25,7 +25,7 @@ export class LoginPage {
   feedback: string | null = null;
   isSubmitting = false;
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     if (this.loginForm.invalid) {
       this.feedback = 'Completa el correo y la contraseña para continuar.';
       return;
@@ -36,7 +36,7 @@ export class LoginPage {
 
     try {
       const payload = this.loginForm.getRawValue();
-      const user = this.authService.loginUser({
+      const user = await this.authService.loginUser({
         email: payload.email ?? '',
         password: payload.password ?? ''
       });

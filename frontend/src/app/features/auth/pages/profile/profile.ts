@@ -339,15 +339,6 @@ export class ProfilePage {
       return;
     }
 
-    const currentPassword = this.editForm.get('currentPassword')?.value ?? '';
-    const storedPassword = this.authService.getStoredPasswordById(currentUser.id);
-
-    if (storedPassword !== currentPassword) {
-      this.editForm.get('currentPassword')?.setErrors({ invalidCurrentPassword: true });
-      this.editForm.markAllAsTouched();
-      return;
-    }
-
     if (this.editForm.invalid) {
       return;
     }
@@ -356,13 +347,13 @@ export class ProfilePage {
 
     try {
       const payload = this.editForm.getRawValue();
-      const newPassword = payload.newPassword ?? '';
 
-      this.authService.updateCurrentUser({
+      await this.authService.updateCurrentUser({
         id: currentUser.id,
         name: payload.name ?? '',
         email: payload.email ?? '',
-        password: newPassword || storedPassword || '',
+        currentPassword: payload.currentPassword ?? '',
+        newPassword: payload.newPassword ?? '',
         role: currentUser.role,
         phone: payload.phone ?? '',
         birthDate: payload.birthDate ?? '',
@@ -373,7 +364,14 @@ export class ProfilePage {
       this.editFeedback = 'Cambios guardados.';
       this.closeEditProfile();
     } catch (error) {
-      this.editFeedback = error instanceof Error ? error.message : 'No pudimos guardar los cambios.';
+      const message = error instanceof Error ? error.message : 'No pudimos guardar los cambios.';
+
+      if (message.toLowerCase().includes('contraseña actual')) {
+        this.editForm.get('currentPassword')?.setErrors({ invalidCurrentPassword: true });
+        this.editForm.markAllAsTouched();
+      }
+
+      this.editFeedback = message;
     } finally {
       this.isSavingEdit = false;
     }
@@ -387,8 +385,8 @@ export class ProfilePage {
     this.showDeleteConfirm = false;
   }
 
-  confirmDelete(): void {
-    this.authService.deleteCurrentUser();
+  async confirmDelete(): Promise<void> {
+    await this.authService.deleteCurrentUser();
     this.showDeleteConfirm = false;
     this.router.navigate(['/']);
   }

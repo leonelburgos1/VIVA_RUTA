@@ -1,22 +1,40 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, map } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { BehaviorSubject, firstValueFrom, map } from 'rxjs';
 import { AuthUser, LoginPayload, RegisterPayload } from '../../../core/models/auth-user.model';
 
-interface StoredAuthUser extends AuthUser {
-  password: string;
+interface AuthTokens {
+  access: string;
+  refresh: string;
+}
+
+interface TokenResponse {
+  access: string;
+  refresh: string;
+}
+
+interface UserApiResponse {
+  id: number;
+  name: string;
+  email: string;
+  role: AuthUser['role'];
+  phone: string;
+  birthDate: string;
+  department: string;
+  city: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly usersStorageKey = 'viva-ruta-users';
+  private readonly http = inject(HttpClient);
   private readonly sessionStorageKey = 'viva-ruta-current-user';
+  private readonly tokenStorageKey = 'viva-ruta-tokens';
+  private readonly apiBaseUrl = 'http://localhost:8000/api';
 
-  private readonly usersSubject = new BehaviorSubject<StoredAuthUser[]>(this.loadStoredUsers());
   private readonly currentUserSubject = new BehaviorSubject<AuthUser | null>(this.loadStoredCurrentUser());
 
-  readonly users$ = this.usersSubject.asObservable();
   readonly currentUser$ = this.currentUserSubject.asObservable();
   readonly isAuthenticated$ = this.currentUser$.pipe(map((user) => !!user));
   readonly isAdmin$ = this.currentUser$.pipe(map((user) => user?.role === 'admin'));
@@ -33,159 +51,145 @@ export class AuthService {
     return this.currentUserSubject.value?.role === 'admin';
   }
 
-  registerUser(payload: RegisterPayload): AuthUser {
+  async registerUser(payload: RegisterPayload): Promise<AuthUser> {
     const normalizedEmail = payload.email.trim().toLowerCase();
 
-    const existingUsers = this.usersSubject.value;
-    const userExists = existingUsers.some((user) => user.email === normalizedEmail);
+    await firstValueFrom(
+      this.http.post<UserApiResponse>(
+        `${this.apiBaseUrl}/users/`,
+        {
+          name: payload.name.trim(),
+          email: normalizedEmail,
+          password: payload.password,
+          role: payload.role,
+          phone: payload.phone,
+          birthDate: payload.birthDate,
+          department: payload.department,
+          city: payload.city
+        }
+      )
+    );
 
-    if (userExists) {
-      throw new Error('Ya existe una cuenta con ese correo.');
-    }
-
-    const newUser: StoredAuthUser = {
-      id: this.createId(),
-      name: payload.name.trim(),
+    return this.loginUser({
       email: normalizedEmail,
-      role: payload.role,
-      phone: payload.phone,
-      birthDate: payload.birthDate,
-      department: payload.department,
-      city: payload.city,
       password: payload.password
-    };
-
-    const nextUsers = [newUser, ...existingUsers];
-    this.usersSubject.next(nextUsers);
-    localStorage.setItem(this.usersStorageKey, JSON.stringify(nextUsers));
-
-    const publicUser: AuthUser = {
-      id: newUser.id,
-      name: newUser.name,
-      email: newUser.email,
-      role: newUser.role,
-      phone: newUser.phone,
-      birthDate: newUser.birthDate,
-      department: newUser.department,
-      city: newUser.city
-    };
-
-    this.setCurrentUser(publicUser);
-    return publicUser;
+    });
   }
 
-  loginUser(payload: LoginPayload): AuthUser {
+  async loginUser(payload: LoginPayload): Promise<AuthUser> {
     const normalizedEmail = payload.email.trim().toLowerCase();
 
-    const storedUser = this.usersSubject.value.find((user) => user.email === normalizedEmail);
+    const tokenResponse = await firstValueFrom(
+      this.http.post<TokenResponse>(`${this.apiBaseUrl}/token/`, {
+        email: normalizedEmail,
+        password: payload.password
+      })
+    );
 
-    if (!storedUser) {
-      throw new Error('No existe una cuenta con ese correo.');
+    this.storeTokens(tokenResponse);
+
+    const profile = await firstValueFrom(
+      this.http.get<UserApiResponse[]>(`${this.apiBaseUrl}/users/`, {
+        headers: this.getAuthHeaders()
+      })
+    );
+
+    const user = profile[0];
+
+    if (!user) {
+      throw new Error('No pudimos cargar el perfil del usuario.');
     }
 
-    if (storedUser.password !== payload.password) {
-      throw new Error('La contraseña es incorrecta.');
-    }
-
-    const publicUser: AuthUser = {
-      id: storedUser.id,
-      name: storedUser.name,
-      email: storedUser.email,
-      role: storedUser.role,
-      phone: storedUser.phone,
-      birthDate: storedUser.birthDate,
-      department: storedUser.department,
-      city: storedUser.city
-    };
-
-    this.setCurrentUser(publicUser);
-    return publicUser;
+    this.setCurrentUser(this.normalizeUser(user));
+    return this.currentUser as AuthUser;
   }
 
   logout(): void {
-    this.currentUserSubject.next(null);
-    sessionStorage.removeItem(this.sessionStorageKey);
+    this.clearAuthState();
   }
 
-  deleteCurrentUser(): void {
-    const currentUser = this.currentUserSubject.value;
+  async deleteCurrentUser(): Promise<void> {
+    const currentUser = this.currentUser;
 
     if (!currentUser) {
       return;
     }
 
-    const nextUsers = this.usersSubject.value.filter((user) => user.id !== currentUser.id);
-    this.usersSubject.next(nextUsers);
-    localStorage.setItem(this.usersStorageKey, JSON.stringify(nextUsers));
-    this.setCurrentUser(null);
+    await firstValueFrom(
+      this.http.delete<void>(`${this.apiBaseUrl}/users/${currentUser.id}/`, {
+        headers: this.getAuthHeaders()
+      })
+    );
+
+    this.clearAuthState();
   }
 
-  getStoredPasswordById(userId: number): string | null {
-    return this.usersSubject.value.find((user) => user.id === userId)?.password ?? null;
-  }
-
-  updateCurrentUser(payload: {
+  async updateCurrentUser(payload: {
     id: number;
     name: string;
     email: string;
-    password: string;
+    currentPassword: string;
+    newPassword: string;
     role: AuthUser['role'];
     phone: string;
     birthDate: string;
     department: string;
     city: string;
-  }): AuthUser {
+  }): Promise<AuthUser> {
     const normalizedEmail = payload.email.trim().toLowerCase();
-    const existingUsers = this.usersSubject.value;
-    const duplicateUser = existingUsers.find((user) => user.email === normalizedEmail && user.id !== payload.id);
 
-    if (duplicateUser) {
-      throw new Error('Ya existe una cuenta con ese correo.');
-    }
+    const updatedUser = await firstValueFrom(
+      this.http.patch<UserApiResponse>(
+        `${this.apiBaseUrl}/users/${payload.id}/`,
+        {
+          name: payload.name.trim(),
+          email: normalizedEmail,
+          currentPassword: payload.currentPassword,
+          newPassword: payload.newPassword,
+          role: payload.role,
+          phone: payload.phone,
+          birthDate: payload.birthDate,
+          department: payload.department,
+          city: payload.city
+        },
+        {
+          headers: this.getAuthHeaders()
+        }
+      )
+    );
 
-    const updatedUser: StoredAuthUser = {
-      id: payload.id,
-      name: payload.name.trim(),
-      email: normalizedEmail,
-      role: payload.role,
-      phone: payload.phone,
-      birthDate: payload.birthDate,
-      department: payload.department,
-      city: payload.city,
-      password: payload.password
-    };
-
-    const nextUsers = existingUsers.map((user) => user.id === payload.id ? updatedUser : user);
-    this.usersSubject.next(nextUsers);
-    localStorage.setItem(this.usersStorageKey, JSON.stringify(nextUsers));
-
-    const publicUser: AuthUser = {
-      id: updatedUser.id,
-      name: updatedUser.name,
-      email: updatedUser.email,
-      role: updatedUser.role,
-      phone: updatedUser.phone,
-      birthDate: updatedUser.birthDate,
-      department: updatedUser.department,
-      city: updatedUser.city
-    };
-
-    this.setCurrentUser(publicUser);
-    return publicUser;
+    this.setCurrentUser(this.normalizeUser(updatedUser));
+    return this.currentUser as AuthUser;
   }
 
-  private loadStoredUsers(): StoredAuthUser[] {
-    const rawUsers = localStorage.getItem(this.usersStorageKey);
+  private getAuthHeaders(): HttpHeaders {
+    const tokens = this.loadStoredTokens();
 
-    if (!rawUsers) {
-      return [];
+    if (!tokens?.access) {
+      return new HttpHeaders();
+    }
+
+    return new HttpHeaders({
+      Authorization: `Bearer ${tokens.access}`
+    });
+  }
+
+  private loadStoredTokens(): AuthTokens | null {
+    const rawTokens = localStorage.getItem(this.tokenStorageKey);
+
+    if (!rawTokens) {
+      return null;
     }
 
     try {
-      return JSON.parse(rawUsers) as StoredAuthUser[];
+      return JSON.parse(rawTokens) as AuthTokens;
     } catch {
-      return [];
+      return null;
     }
+  }
+
+  private storeTokens(tokens: TokenResponse): void {
+    localStorage.setItem(this.tokenStorageKey, JSON.stringify(tokens));
   }
 
   private loadStoredCurrentUser(): AuthUser | null {
@@ -213,8 +217,22 @@ export class AuthService {
     sessionStorage.removeItem(this.sessionStorageKey);
   }
 
-  private createId(): number {
-    const maxId = this.usersSubject.value.reduce((acc, user) => Math.max(acc, user.id), 0);
-    return maxId + 1;
+  private clearAuthState(): void {
+    this.currentUserSubject.next(null);
+    sessionStorage.removeItem(this.sessionStorageKey);
+    localStorage.removeItem(this.tokenStorageKey);
+  }
+
+  private normalizeUser(user: UserApiResponse): AuthUser {
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      phone: user.phone,
+      birthDate: user.birthDate,
+      department: user.department,
+      city: user.city
+    };
   }
 }

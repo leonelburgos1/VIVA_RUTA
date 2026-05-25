@@ -1,15 +1,145 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.hashers import check_password
 
-from rest_framework import serializers
+from rest_framework import exceptions, serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import Place, Review, Tour
+from .models import Place, Review, Tour, UserProfile
 
 
-class UserSerializer(serializers.ModelSerializer):
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        email = attrs.get('email')
+        password = attrs.get('password')
 
-    class Meta:
-        model = User
-        fields = '__all__'
+        if not email or not password:
+            raise exceptions.ValidationError(
+                {'detail': 'Email and password are required.'}
+            )
+
+        user = UserProfile.objects.filter(email__iexact=email).first()
+
+        if not user or not check_password(password, user.password):
+            raise exceptions.AuthenticationFailed('Credenciales inválidas.')
+
+        refresh = RefreshToken.for_user(user)
+
+        return {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }
+
+
+class UserSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    name = serializers.CharField(required=False, allow_blank=False)
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True, required=False)
+    currentPassword = serializers.CharField(write_only=True, required=False)
+    newPassword = serializers.CharField(write_only=True, required=False)
+    role = serializers.ChoiceField(choices=['admin', 'usuario'], required=False)
+    phone = serializers.CharField(required=False, allow_blank=True)
+    birthDate = serializers.DateField(required=False, allow_null=True)
+    department = serializers.CharField(required=False, allow_blank=True)
+    city = serializers.CharField(required=False, allow_blank=True)
+
+    def validate_email(self, value):
+        normalized_email = value.strip().lower()
+        queryset = UserProfile.objects.filter(email__iexact=normalized_email)
+
+        if self.instance is not None:
+            queryset = queryset.exclude(pk=self.instance.pk)
+
+        if queryset.exists():
+            raise serializers.ValidationError('Ya existe una cuenta con ese correo.')
+
+        return normalized_email
+
+    def validate(self, attrs):
+        if self.instance is None and not attrs.get('password'):
+            raise serializers.ValidationError({'password': 'Este campo es obligatorio.'})
+
+        if self.instance is None and not attrs.get('name'):
+            raise serializers.ValidationError({'name': 'Este campo es obligatorio.'})
+
+        if self.instance is not None:
+            current_password = attrs.get('currentPassword')
+            new_password = attrs.get('newPassword')
+
+            if new_password and not current_password:
+                raise serializers.ValidationError({
+                    'currentPassword': 'La contraseña actual es obligatoria para cambiar la contraseña.'
+                })
+
+            if current_password and not self.instance.check_password(current_password):
+                raise serializers.ValidationError({
+                    'currentPassword': 'La contraseña actual es incorrecta.'
+                })
+
+        return attrs
+
+    def create(self, validated_data):
+        role = validated_data.get('role', 'usuario')
+        password = validated_data.pop('password')
+        username = validated_data.get('name', '').strip() or validated_data['email']
+        birth_date = validated_data.pop('birthDate', None)
+        phone = validated_data.pop('phone', '')
+        department = validated_data.pop('department', '')
+        city = validated_data.pop('city', '')
+
+        user = UserProfile.objects.create_user(
+            username=username,
+            email=validated_data['email'],
+            password=password,
+            role=role,
+            phone=phone,
+            birth_date=birth_date,
+            department=department,
+            city=city,
+        )
+
+        return user
+
+    def update(self, instance, validated_data):
+        if 'name' in validated_data:
+            instance.username = validated_data['name'].strip()
+
+        if 'email' in validated_data:
+            instance.email = validated_data['email']
+
+        if 'newPassword' in validated_data and validated_data['newPassword']:
+            instance.set_password(validated_data['newPassword'])
+
+        if 'role' in validated_data:
+            instance.role = validated_data['role']
+
+        if 'phone' in validated_data:
+            instance.phone = validated_data['phone']
+
+        if 'birthDate' in validated_data:
+            instance.birth_date = validated_data['birthDate']
+
+        if 'department' in validated_data:
+            instance.department = validated_data['department']
+
+        if 'city' in validated_data:
+            instance.city = validated_data['city']
+
+        instance.save()
+
+        return instance
+
+    def to_representation(self, instance):
+        return {
+            'id': instance.id,
+            'name': instance.username,
+            'email': instance.email,
+            'role': instance.role,
+            'phone': instance.phone,
+            'birthDate': instance.birth_date.isoformat() if instance.birth_date else '',
+            'department': instance.department,
+            'city': instance.city,
+        }
 
 
 class ReviewSerializer(serializers.ModelSerializer):

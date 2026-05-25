@@ -1,6 +1,89 @@
 from django.conf import settings
+from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.db import models
 from django.utils.text import slugify
+
+
+class UserProfileManager(BaseUserManager):
+
+    use_in_migrations = True
+
+    def create_user(self, username, email, password=None, **extra_fields):
+
+        if not username:
+            raise ValueError('El nombre de usuario es obligatorio.')
+
+        if not email:
+            raise ValueError('El email es obligatorio.')
+
+        email = self.normalize_email(email)
+
+        user = self.model(
+            username=username,
+            email=email,
+            **extra_fields
+        )
+
+        user.set_password(password)
+        user.save(using=self._db)
+
+        return user
+
+    def create_superuser(self, username, email, password=None, **extra_fields):
+
+        extra_fields.setdefault('role', 'admin')
+
+        if extra_fields.get('role') != 'admin':
+            raise ValueError('El superusuario debe tener rol admin.')
+
+        return self.create_user(username, email, password, **extra_fields)
+
+
+class UserProfile(AbstractBaseUser):
+
+    ROLE_CHOICES = (
+        ('admin', 'admin'),
+        ('usuario', 'usuario'),
+    )
+
+    username = models.CharField(max_length=150, unique=True)
+
+    email = models.EmailField(unique=True)
+
+    role = models.CharField(
+        max_length=20,
+        choices=ROLE_CHOICES,
+        default='usuario'
+    )
+
+    phone = models.CharField(max_length=20, blank=True, default='')
+
+    birth_date = models.DateField(null=True, blank=True)
+
+    department = models.CharField(max_length=100, blank=True, default='')
+
+    city = models.CharField(max_length=100, blank=True, default='')
+
+    last_login = None
+
+    objects = UserProfileManager()
+
+    USERNAME_FIELD = 'email'
+
+    REQUIRED_FIELDS = ['username']
+
+    class Meta:
+        verbose_name = 'usuario'
+        verbose_name_plural = 'usuarios'
+
+    def get_full_name(self):
+        return self.username
+
+    def get_short_name(self):
+        return self.username
+
+    def __str__(self):
+        return f'{self.email} ({self.role})'
 
 
 class Place(models.Model):
@@ -50,7 +133,6 @@ class Place(models.Model):
 
     updated_at = models.DateTimeField(auto_now=True)
 
-    # ✅ CORREGIDO: save() ahora está dentro de la clase (4 espacios de indentación)
     def save(self, *args, **kwargs):
 
         if not self.slug:

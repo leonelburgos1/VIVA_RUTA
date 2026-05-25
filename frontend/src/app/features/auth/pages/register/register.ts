@@ -281,7 +281,7 @@ export class RegisterPage {
 
     try {
       const payload = this.registerForm.getRawValue();
-      const user = this.authService.registerUser({
+      const user = await this.authService.registerUser({
         name: payload.name ?? '',
         email: payload.email ?? '',
         password: payload.password ?? '',
