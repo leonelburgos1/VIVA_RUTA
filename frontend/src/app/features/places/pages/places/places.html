@@ -1,6 +1,11 @@
 <app-navbar></app-navbar>
 
 <section class="places-hero">
+  @if (showSuccessToast) {
+    <div class="hero-toast">
+      <strong>{{ toastMessage }}</strong>
+    </div>
+  }
   <div class="overlay"></div>
   <div class="hero-content">
     <h1>Descubre Lugares</h1>
@@ -9,43 +14,51 @@
 </section>
 
 <section class="places-container">
-
   <div class="top-actions">
     <button class="create-btn" (click)="openCreateModal()">
       + Crear Lugar
     </button>
   </div>
 
-  <app-place-filters></app-place-filters>
+  <app-search-filters
+    [searchPlaceholder]="'Buscar lugares...'"
+    [showCategoryFilter]="true"
+    [showMunicipalityFilter]="true"
+    [categories]="placeCategories"
+    (filtersChange)="onFiltersChange($event)">
+  </app-search-filters>
 
   @if (showCreateModal) {
-    <app-place-form-modal (close)="closeCreateModal()" />
+    <app-place-form-modal (close)="closeCreateModal($event)" />
   }
 
   <div class="places-header">
-    <!-- ✅ contador dinámico -->
+    <!-- contador dinámico -->
     <span>
-      {{ places.length }} lugar{{ places.length !== 1 ? 'es' : '' }} encontrado{{ places.length !== 1 ? 's' : '' }}
+      {{ filteredPlaces.length }} lugar{{ filteredPlaces.length !== 1 ? 'es' : '' }} encontrado{{ filteredPlaces.length !== 1 ? 's' : '' }}
     </span>
-    <button class="sort-btn">Ordenar</button>
   </div>
 
   <div class="places-grid">
-    @for (place of places; track place.id) {
+    @if (filteredPlaces.length === 0) {
+      <p class="empty-state">No encontramos lugares con esos filtros.</p>
+    } @else {
+      @for (place of filteredPlaces; track place.id) {
       <!-- ✅ usa image_url (URL absoluta) y slug para navegar -->
-      <app-place-card
-        [id]="place.id"
-        [slug]="place.slug"
-        [title]="place.title"
-        [location]="place.location"
-        [image]="place.image_url"
-        [description]="place.short_description"
-        [category]="place.category"
-        [categoryLabel]="place.category_label"
-        [features]="place.features"
-        [rating]="place.rating"
-      >
-      </app-place-card>
+        <app-place-card
+          [id]="place.id"
+          [slug]="place.slug"
+          [title]="place.title"
+          [location]="place.location"
+          [image]="place.image_url"
+          [description]="place.short_description"
+          [category]="place.category"
+          [categoryLabel]="place.category_label"
+          [features]="place.features"
+          [rating]="place.rating"
+        >
+        </app-place-card>
+      }
     }
   </div>
 

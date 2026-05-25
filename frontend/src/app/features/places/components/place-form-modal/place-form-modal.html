@@ -4,178 +4,157 @@
 
     <button
       class="close-btn"
+      type="button"
       (click)="closeModal()">
-
       <lucide-angular
         [img]="X"
         class="close-icon">
       </lucide-angular>
-
     </button>
 
-    <h2>
-      Crear Nuevo Lugar
-    </h2>
+    <h2>Crear Nuevo Lugar</h2>
 
     <form
       [formGroup]="placeForm"
       (ngSubmit)="createPlace()">
 
       <div class="form-group">
-
-        <label>
-          Nombre del lugar *
-        </label>
-
+        <label>Nombre del lugar *</label>
         <input
           type="text"
           formControlName="title"
+          [class.input-error]="hasError('title')"
         />
-
+        @if (hasError('title')) {
+          <span class="error-message">{{ getErrorMessage('title') }}</span>
+        }
       </div>
 
       <div class="double-grid">
-
         <div class="form-group">
-
-          <label>
-            Ubicación *
-          </label>
-
+          <label>Ubicación *</label>
           <div class="select-wrapper">
-
-            <select formControlName="location">
-
-              <option value="">
-                Selecciona ubicación
-              </option>
+            <select
+              formControlName="location"
+              [class.input-error]="hasError('location')">
+              <option value="">Selecciona ubicación</option>
 
               @for (item of municipalities; track item) {
-
                 <option [value]="item">
                   {{ item }}
                 </option>
-
               }
-
             </select>
-
+            <lucide-angular [img]="ChevronDown" class="select-icon"></lucide-angular>
           </div>
-
+          @if (hasError('location')) {
+            <span class="error-message">{{ getErrorMessage('location') }}</span>
+          }
         </div>
 
         <div class="form-group">
-
-          <label>
-            Categoría *
-          </label>
-
+          <label>Categoría *</label>
           <div class="select-wrapper">
-
-            <select formControlName="category">
-
-              <option value="">
-                Selecciona categoría
-              </option>
+            <select
+              formControlName="category"
+              [class.input-error]="hasError('category')">
+              <option value="">Selecciona categoría</option>
 
               @for (item of categories; track item.value) {
-
                 <option [value]="item.value">
                   {{ item.label }}
                 </option>
-
               }
-
             </select>
-
+            <lucide-angular [img]="ChevronDown" class="select-icon"></lucide-angular>
           </div>
-
+          @if (hasError('category')) {
+            <span class="error-message">{{ getErrorMessage('category') }}</span>
+          }
         </div>
-
       </div>
 
       <div class="form-group">
-
-        <label>
-          Descripción corta *
-        </label>
-
+        <label>Descripción corta *</label>
         <input
           type="text"
           formControlName="short_description"
+          [class.input-error]="hasError('short_description')"
         />
-
+        @if (hasError('short_description')) {
+          <span class="error-message">{{ getErrorMessage('short_description') }}</span>
+        }
       </div>
 
       <div class="form-group">
-
-        <label>
-          Descripción completa *
-        </label>
-
+        <label>Descripción completa *</label>
         <textarea
           rows="5"
-          formControlName="full_description">
+          formControlName="full_description"
+          [class.input-error]="hasError('full_description')">
         </textarea>
-
+        @if (hasError('full_description')) {
+          <span class="error-message">{{ getErrorMessage('full_description') }}</span>
+        }
       </div>
 
       <div class="form-group">
-
-        <label>
-          Dirección *
-        </label>
-
+        <label>Dirección *</label>
         <input
           type="text"
           formControlName="address"
+          [class.input-error]="hasError('address')"
         />
-
+        @if (hasError('address')) {
+          <span class="error-message">{{ getErrorMessage('address') }}</span>
+        }
       </div>
 
       <div class="form-group">
-
-        <label>
-          Características
-        </label>
-
+        <label>Características</label>
         <input
           type="text"
           formControlName="features"
+          placeholder="Separado por comas: mirador, senderismo, café"
         />
-
+        <span class="helper-text">Escríbelas separadas por coma para mostrarlas como viñetas.</span>
       </div>
 
       <div class="form-group">
-
-        <label>
-          URL de imagen
+        <label>Imagen del lugar *</label>
+        <label
+          class="file-dropzone"
+          [class.input-error]="isInvalidFile()">
+          <input
+            type="file"
+            accept="image/*"
+            (change)="onFileSelected($event)"
+          />
+          <lucide-angular [img]="Upload" class="upload-icon"></lucide-angular>
+          <span class="file-title">
+            {{ selectedFileName || 'Selecciona una imagen desde tu computador' }}
+          </span>
+          <span class="file-subtitle">JPG, PNG o WEBP para el lugar</span>
         </label>
-
-        <input
-          type="file"
-          (change)="onFileSelected($event)"
-        >
-
+        @if (isInvalidFile()) {
+          <span class="error-message">{{ getErrorMessage('image') }}</span>
+        }
       </div>
 
       <div class="actions">
-
         <button
           type="button"
           class="cancel-btn"
           (click)="closeModal()">
-
           Cancelar
-
         </button>
 
         <button
           type="submit"
-          class="submit-btn">
-          Crear Lugar
+          class="submit-btn"
+          [disabled]="isSubmitting">
+          {{ isSubmitting ? 'Guardando...' : submitLabel }}
         </button>
-
       </div>
 
     </form>

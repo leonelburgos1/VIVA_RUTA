@@ -30,6 +30,8 @@ export interface Tour {
 
   schedule: string;
 
+  image: string;
+
   includes: string[];
 
   rating: number;

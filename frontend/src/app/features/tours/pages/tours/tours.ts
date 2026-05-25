@@ -6,16 +6,14 @@ import {
 } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 
 import {
   LucideAngularModule,
-  Plus,
-  Search,
-  SlidersHorizontal
+  Plus
 } from 'lucide-angular';
 
 import { Navbar } from '../../../../shared/components/navbar/navbar';
+import { SearchFilters } from '../../../../shared/components/search-filters/search-filters';
 import { TourCard } from '../../../../shared/components/tour-card/tour-card';
 import { TourFormModal } from '../../components/tour-form-modal/tour-form-modal';
 import { TourService } from '../../services/tour.service';
@@ -26,9 +24,9 @@ import { Tour } from '../../../../core/models/tour.model';
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
     LucideAngularModule,
     Navbar,
+    SearchFilters,
     TourCard,
     TourFormModal
   ],
@@ -41,14 +39,15 @@ export class Tours implements OnInit {
   private cdr = inject(ChangeDetectorRef);
 
   readonly Plus = Plus;
-  readonly Search = Search;
-  readonly SlidersHorizontal = SlidersHorizontal;
 
   tours: Tour[] = [];
   filteredTours: Tour[] = [];
   searchTerm = '';
   loadingTours = true;
   showCreateModal = false;
+  showSuccessToast = false;
+  toastMessage = '';
+  private toastTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   ngOnInit(): void {
     this.loadTours();
@@ -83,21 +82,46 @@ export class Tours implements OnInit {
     this.filteredTours = this.tours.filter((tour) =>
       tour.title.toLowerCase().includes(normalizedSearch) ||
       tour.place_name.toLowerCase().includes(normalizedSearch) ||
-      tour.place_location.toLowerCase().includes(normalizedSearch)
+      tour.place_location.toLowerCase().includes(normalizedSearch) ||
+      tour.description.toLowerCase().includes(normalizedSearch)
     );
+  }
+
+  onFiltersChange(event: {
+    category: string;
+    municipality: string;
+    searchTerm: string;
+  }): void {
+    this.searchTerm = event.searchTerm;
+    this.applyFilters();
   }
 
   openCreateModal(): void {
     this.showCreateModal = true;
   }
 
-  closeCreateModal(shouldReload = false): void {
+  closeCreateModal(event: { reload: boolean; message?: string }): void {
     this.showCreateModal = false;
 
-    if (shouldReload) {
+    if (event.reload) {
+      this.openSuccessToast(event.message || 'Tour registrado con éxito');
       this.loadingTours = true;
       this.loadTours();
     }
+  }
+
+  private openSuccessToast(message: string): void {
+    this.toastMessage = message;
+    this.showSuccessToast = true;
+
+    if (this.toastTimeoutId) {
+      clearTimeout(this.toastTimeoutId);
+    }
+
+    this.toastTimeoutId = setTimeout(() => {
+      this.showSuccessToast = false;
+      this.cdr.detectChanges();
+    }, 3200);
   }
 
 }

@@ -1,8 +1,9 @@
 import {
   Component,
-  inject,
+  EventEmitter,
+  Input,
   Output,
-  EventEmitter
+  inject
 } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
@@ -14,9 +15,15 @@ import {
   Validators
 } from '@angular/forms';
 
-import { X, ChevronDown } from 'lucide-angular';
-import { LucideAngularModule } from 'lucide-angular';
+import {
+  ChevronDown,
+  LucideAngularModule,
+  Upload,
+  X
+} from 'lucide-angular';
+
 import { PlaceService } from '../../services/place.service';
+import { Place } from '../../../../core/models/place.model';
 import colombiaData from 'colombia-cities/colombia_completa.json';
 
 interface PlaceCategoryOption {
@@ -31,6 +38,11 @@ interface ColombiaDepartment {
 
 interface ColombiaDataFile {
   departamentos: ColombiaDepartment[];
+}
+
+interface PlaceFormCloseEvent {
+  reload: boolean;
+  message?: string;
 }
 
 @Component({
@@ -49,19 +61,23 @@ export class PlaceFormModal {
   private fb = inject(FormBuilder);
   private placeService = inject(PlaceService);
 
-  @Output() close = new EventEmitter<void>();
+  @Input() placeToEdit: Place | null = null;
+  @Output() close = new EventEmitter<PlaceFormCloseEvent>();
 
   readonly X = X;
   readonly ChevronDown = ChevronDown;
+  readonly Upload = Upload;
 
-  // ✅ Declarar selectedFile aquí
   selectedFile: File | null = null;
+  selectedFileName = '';
+  isSubmitting = false;
 
   categories: PlaceCategoryOption[] = [
     { label: 'Naturaleza', value: 'Nature' },
     { label: 'Religioso', value: 'Religious' },
     { label: 'Aventura', value: 'Adventure' },
     { label: 'Cultura', value: 'Culture' },
+    { label: 'Gastronomía', value: 'Gastronomy' },
     { label: 'Playa', value: 'Beach' }
   ];
 
@@ -75,25 +91,48 @@ export class PlaceFormModal {
     full_description: ['', Validators.required],
     address: ['', Validators.required],
     features: [''],
-    // ✅ Quita el campo image del form, los archivos no van aquí
+    image: [null, Validators.required]
   });
 
-  // ✅ Método que faltaba completamente
+  ngOnInit(): void {
+    if (this.placeToEdit) {
+      this.patchForm(this.placeToEdit);
+      this.placeForm.get('image')?.clearValidators();
+      this.placeForm.get('image')?.updateValueAndValidity();
+    }
+  }
+
+  get isEditMode(): boolean {
+    return !!this.placeToEdit;
+  }
+
+  get submitLabel(): string {
+    return this.isEditMode ? 'Actualizar' : 'Crear Lugar';
+  }
+
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      this.selectedFile = input.files[0];
-    }
+    const file = input.files?.[0] ?? null;
+
+    this.selectedFile = file;
+    this.selectedFileName = file?.name ?? '';
+    this.placeForm.patchValue({ image: file });
+    this.placeForm.get('image')?.markAsTouched();
+    this.placeForm.get('image')?.updateValueAndValidity();
   }
 
   createPlace(): void {
 
-    if (this.placeForm.invalid) {
+    const requiresImage = !this.isEditMode && !this.selectedFile;
+
+    if (this.placeForm.invalid || requiresImage) {
       this.placeForm.markAllAsTouched();
+      this.placeForm.get('image')?.setErrors(
+        requiresImage ? { required: true } : null
+      );
       return;
     }
 
-    // ✅ Primero crea el FormData
     const formData = new FormData();
 
     formData.append('title', this.placeForm.value.title || '');
@@ -106,28 +145,67 @@ export class PlaceFormModal {
 
     const features = this.placeForm.value.features
       ?.split(',')
-      .map((item: string) => item.trim());
+      .map((item: string) => item.trim())
+      .filter((item: string) => item.length > 0);
 
     formData.append('features', JSON.stringify(features || []));
-
-    // ✅ Luego agrega la imagen (después de declarar formData)
     if (this.selectedFile) {
       formData.append('image', this.selectedFile);
     }
 
-    this.placeService.createPlace(formData).subscribe({
+    this.isSubmitting = true;
+
+    const request = this.isEditMode && this.placeToEdit
+      ? this.placeService.updatePlace(this.placeToEdit.slug, formData)
+      : this.placeService.createPlace(formData);
+
+    request.subscribe({
       next: () => {
-        alert('Lugar creado correctamente');
-        this.close.emit();
+        this.isSubmitting = false;
+        this.close.emit({
+          reload: true,
+          message: this.isEditMode
+            ? 'Lugar actualizado con éxito'
+            : 'Lugar registrado con éxito'
+        });
       },
       error: (err) => {
+        this.isSubmitting = false;
         console.log(err);
       }
     });
   }
 
+  hasError(controlName: string): boolean {
+    const control = this.placeForm.get(controlName);
+    return !!control && control.invalid && (control.touched || control.dirty);
+  }
+
+  getErrorMessage(controlName: string): string {
+    const control = this.placeForm.get(controlName);
+
+    if (!control?.errors) {
+      return '';
+    }
+
+    if (control.errors['required']) {
+      return 'Este campo es obligatorio.';
+    }
+
+    return 'Revisa este campo.';
+  }
+
+  isInvalidFile(): boolean {
+    const control = this.placeForm.get('image');
+    return !!control && control.invalid && (control.touched || control.dirty);
+  }
+
   closeModal(): void {
-    this.close.emit();
+    if (this.isSubmitting) {
+      return;
+    }
+
+    this.close.emit({ reload: false });
   }
 
   private getNarinoMunicipalities(): string[] {
@@ -143,5 +221,17 @@ export class PlaceFormModal {
     return narinoDepartment.municipios
       .map((city) => city.nombre)
       .sort((a, b) => a.localeCompare(b, 'es'));
+  }
+
+  private patchForm(place: Place): void {
+    this.placeForm.patchValue({
+      title: place.title,
+      location: place.location,
+      category: place.category,
+      short_description: place.short_description,
+      full_description: place.full_description,
+      address: place.address,
+      features: (place.features || []).join(', ')
+    });
   }
 }

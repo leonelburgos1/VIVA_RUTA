@@ -1,6 +1,11 @@
 <app-navbar></app-navbar>
 
 <section class="tours-hero">
+  @if (showSuccessToast) {
+    <div class="hero-toast">
+      <strong>{{ toastMessage }}</strong>
+    </div>
+  }
   <div class="overlay"></div>
   <div class="hero-content">
     <h1>Tours y Experiencias</h1>
@@ -9,7 +14,6 @@
 </section>
 
 <section class="tours-container">
-
   <div class="top-actions">
     <button
       class="create-btn"
@@ -19,22 +23,10 @@
     </button>
   </div>
 
-  <div class="search-card">
-    <div class="search-input">
-      <lucide-angular [img]="Search" class="search-icon"></lucide-angular>
-      <input
-        type="text"
-        placeholder="Buscar tours..."
-        [(ngModel)]="searchTerm"
-        (ngModelChange)="applyFilters()"
-      />
-    </div>
-
-    <button class="filter-btn" type="button">
-      <lucide-angular [img]="SlidersHorizontal" class="filter-icon"></lucide-angular>
-      Filtros
-    </button>
-  </div>
+  <app-search-filters
+    [searchPlaceholder]="'Buscar tours...'"
+    (filtersChange)="onFiltersChange($event)">
+  </app-search-filters>
 
   @if (showCreateModal) {
     <app-tour-form-modal (close)="closeCreateModal($event)"></app-tour-form-modal>

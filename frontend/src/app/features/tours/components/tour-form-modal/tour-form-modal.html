@@ -4,6 +4,7 @@
 
     <button
       class="close-btn"
+      type="button"
       (click)="closeModal()">
       <lucide-angular
         [img]="X"
@@ -23,13 +24,19 @@
           type="text"
           placeholder="Ej: Tour Laguna de La Cocha"
           formControlName="title"
+          [class.input-error]="hasError('title')"
         />
+        @if (hasError('title')) {
+          <span class="error-message">{{ getErrorMessage('title') }}</span>
+        }
       </div>
 
       <div class="form-group">
         <label>Lugar asociado *</label>
         <div class="select-wrapper">
-          <select formControlName="place">
+          <select
+            formControlName="place"
+            [class.input-error]="hasError('place')">
             <option value="">Selecciona un lugar</option>
 
             @for (place of places; track place.id) {
@@ -40,6 +47,9 @@
           </select>
           <lucide-angular [img]="ChevronDown" class="select-icon"></lucide-angular>
         </div>
+        @if (hasError('place')) {
+          <span class="error-message">{{ getErrorMessage('place') }}</span>
+        }
       </div>
 
       <div class="form-group">
@@ -47,18 +57,28 @@
         <textarea
           rows="4"
           placeholder="Describe la experiencia del tour"
-          formControlName="description">
+          formControlName="description"
+          [class.input-error]="hasError('description')">
         </textarea>
+        @if (hasError('description')) {
+          <span class="error-message">{{ getErrorMessage('description') }}</span>
+        }
       </div>
 
       <div class="double-grid">
         <div class="form-group">
           <label>Precio (COP) *</label>
           <input
-            type="number"
-            placeholder="80000"
-            formControlName="price"
+            type="text"
+            inputmode="numeric"
+            placeholder="100.000"
+            [value]="priceDisplay"
+            (input)="onPriceInput($event)"
+            [class.input-error]="hasError('price')"
           />
+          @if (hasError('price')) {
+            <span class="error-message">{{ getErrorMessage('price') }}</span>
+          }
         </div>
 
         <div class="form-group">
@@ -67,7 +87,11 @@
             type="text"
             placeholder="Ej: 6 horas"
             formControlName="duration"
+            [class.input-error]="hasError('duration')"
           />
+          @if (hasError('duration')) {
+            <span class="error-message">{{ getErrorMessage('duration') }}</span>
+          }
         </div>
       </div>
 
@@ -76,18 +100,70 @@
           <label>Cupos máximos *</label>
           <input
             type="number"
+            min="1"
+            step="1"
             placeholder="15"
             formControlName="max_spots"
+            (input)="onMaxSpotsInput($event)"
+            [class.input-error]="hasError('max_spots')"
           />
+          @if (hasError('max_spots')) {
+            <span class="error-message">{{ getErrorMessage('max_spots') }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="double-grid schedule-grid">
+        <div class="form-group">
+          <label>Horario de salida *</label>
+          <div class="time-row">
+            <input
+              type="text"
+              inputmode="numeric"
+              maxlength="5"
+              placeholder="00:00"
+              formControlName="departure_time"
+              (input)="onTimeInput('departure_time', $event)"
+              [class.input-error]="hasError('departure_time')"
+            />
+            <div class="select-wrapper period-select">
+              <select formControlName="departure_period">
+                <option value="AM">AM</option>
+                <option value="PM">PM</option>
+              </select>
+              <lucide-angular [img]="ChevronDown" class="select-icon"></lucide-angular>
+            </div>
+          </div>
+          @if (hasError('departure_time')) {
+            <span class="error-message">{{ getErrorMessage('departure_time') }}</span>
+          }
         </div>
 
         <div class="form-group">
-          <label>Horario *</label>
-          <input
-            type="text"
-            placeholder="Salida 8:00 AM - Retorno 2:00 PM"
-            formControlName="schedule"
-          />
+          <label>Horario de retorno *</label>
+          <div class="time-row">
+            <input
+              type="text"
+              inputmode="numeric"
+              maxlength="5"
+              placeholder="00:00"
+              formControlName="return_time"
+              (input)="onTimeInput('return_time', $event)"
+              [class.input-error]="hasError('return_time')"
+            />
+            <div class="select-wrapper period-select">
+              <select
+                formControlName="return_period"
+                [class.input-error]="hasError('return_period')">
+                <option value="AM">AM</option>
+                <option value="PM">PM</option>
+              </select>
+              <lucide-angular [img]="ChevronDown" class="select-icon"></lucide-angular>
+            </div>
+          </div>
+          @if (hasError('return_time') || hasError('return_period')) {
+            <span class="error-message">{{ getErrorMessage('return_time') }}</span>
+          }
         </div>
       </div>
 
@@ -96,17 +172,33 @@
         <textarea
           rows="3"
           placeholder="Separado por comas: Transporte, Guía, Almuerzo, Seguro"
-          formControlName="includes">
+          formControlName="includes"
+          [class.input-error]="hasError('includes')">
         </textarea>
+        @if (hasError('includes')) {
+          <span class="error-message">{{ getErrorMessage('includes') }}</span>
+        }
       </div>
 
       <div class="form-group">
-        <label>URL de imagen</label>
-        <input
-          type="text"
-          placeholder="https://ejemplo.com/imagen.jpg"
-          formControlName="image_url"
-        />
+        <label>Imagen del tour *</label>
+        <label
+          class="file-dropzone"
+          [class.input-error]="isInvalidFile()">
+          <input
+            type="file"
+            accept="image/*"
+            (change)="onFileSelected($event)"
+          />
+          <lucide-angular [img]="Upload" class="upload-icon"></lucide-angular>
+          <span class="file-title">
+            {{ selectedFileName || 'Selecciona una imagen desde tu computador' }}
+          </span>
+          <span class="file-subtitle">JPG, PNG o WEBP para el tour</span>
+        </label>
+        @if (isInvalidFile()) {
+          <span class="error-message">{{ getErrorMessage('image') }}</span>
+        }
       </div>
 
       <div class="actions">
@@ -119,8 +211,9 @@
 
         <button
           type="submit"
-          class="submit-btn">
-          Crear Tour
+          class="submit-btn"
+          [disabled]="isSubmitting">
+          {{ isSubmitting ? 'Guardando...' : submitLabel }}
         </button>
       </div>
 

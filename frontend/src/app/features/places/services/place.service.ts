@@ -23,6 +23,10 @@ export class PlaceService {
     return this.http.post<Place>(this.apiUrl, data);
   }
 
+  updatePlace(slug: string, data: FormData): Observable<Place> {
+    return this.http.patch<Place>(`${this.apiUrl}${slug}/`, data);
+  }
+
   deletePlace(slug: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}${slug}/`);
   }

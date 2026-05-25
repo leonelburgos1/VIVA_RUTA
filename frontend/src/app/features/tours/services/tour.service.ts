@@ -20,8 +20,16 @@ export class TourService {
     return this.http.get<Tour>(`${this.apiUrl}${slug}/`);
   }
 
-  createTour(payload: Record<string, unknown>): Observable<Tour> {
+  createTour(payload: FormData): Observable<Tour> {
     return this.http.post<Tour>(this.apiUrl, payload);
+  }
+
+  updateTour(slug: string, payload: FormData): Observable<Tour> {
+    return this.http.patch<Tour>(`${this.apiUrl}${slug}/`, payload);
+  }
+
+  deleteTour(slug: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}${slug}/`);
   }
 
 }

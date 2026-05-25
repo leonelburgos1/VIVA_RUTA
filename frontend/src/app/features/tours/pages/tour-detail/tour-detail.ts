@@ -15,13 +15,16 @@ import {
   Clock3,
   LucideAngularModule,
   MapPin,
+  Pencil,
   Star,
+  Trash2,
   Users
 } from 'lucide-angular';
 
 import { Navbar } from '../../../../shared/components/navbar/navbar';
 import { TourService } from '../../services/tour.service';
 import { Tour } from '../../../../core/models/tour.model';
+import { TourFormModal } from '../../components/tour-form-modal/tour-form-modal';
 
 @Component({
   selector: 'app-tour-detail',
@@ -30,7 +33,8 @@ import { Tour } from '../../../../core/models/tour.model';
     CommonModule,
     FormsModule,
     Navbar,
-    LucideAngularModule
+    LucideAngularModule,
+    TourFormModal
   ],
   templateUrl: './tour-detail.html',
   styleUrl: './tour-detail.css'
@@ -48,11 +52,17 @@ export class TourDetail implements OnInit {
   readonly Users = Users;
   readonly Star = Star;
   readonly Calendar = Calendar;
+  readonly Pencil = Pencil;
+  readonly Trash2 = Trash2;
 
   tour: Tour | null = null;
   loading = true;
   selectedDate = '';
   peopleCount = 1;
+  showEditModal = false;
+  showToast = false;
+  toastMessage = '';
+  private toastTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   ngOnInit(): void {
     const slug = this.route.snapshot.paramMap.get('slug');
@@ -63,6 +73,55 @@ export class TourDetail implements OnInit {
       return;
     }
 
+    this.loadTour(slug);
+  }
+
+  goBack(): void {
+    this.router.navigate(['/tours']);
+  }
+
+  goToPlace(): void {
+    if (!this.tour?.place_slug) return;
+
+    this.router.navigate(['/lugares', this.tour.place_slug]);
+  }
+
+  openEditModal(): void {
+    this.showEditModal = true;
+  }
+
+  closeEditModal(event: { reload: boolean; message?: string }): void {
+    this.showEditModal = false;
+
+    if (event.reload && this.tour) {
+      this.openToast(event.message || 'Tour actualizado con éxito');
+      this.loadTour(this.tour.slug);
+    }
+  }
+
+  deleteTour(): void {
+    if (!this.tour) return;
+
+    const confirmed = confirm(
+      `¿Estás seguro de que deseas eliminar "${this.tour.title}"?`
+    );
+    if (!confirmed) return;
+
+    this.tourService.deleteTour(this.tour.slug).subscribe({
+      next: () => {
+        this.router.navigate(['/tours']);
+      },
+      error: (error) => {
+        console.error('Error eliminando tour:', error);
+      }
+    });
+  }
+
+  get totalPrice(): number {
+    return this.tour ? this.tour.price * this.peopleCount : 0;
+  }
+
+  private loadTour(slug: string): void {
     this.tourService.getTourBySlug(slug).subscribe({
       next: (tour) => {
         this.tour = tour;
@@ -77,18 +136,18 @@ export class TourDetail implements OnInit {
     });
   }
 
-  goBack(): void {
-    this.router.navigate(['/tours']);
-  }
+  private openToast(message: string): void {
+    this.toastMessage = message;
+    this.showToast = true;
 
-  goToPlace(): void {
-    if (!this.tour?.place_slug) return;
+    if (this.toastTimeoutId) {
+      clearTimeout(this.toastTimeoutId);
+    }
 
-    this.router.navigate(['/lugares', this.tour.place_slug]);
-  }
-
-  get totalPrice(): number {
-    return this.tour ? this.tour.price * this.peopleCount : 0;
+    this.toastTimeoutId = setTimeout(() => {
+      this.showToast = false;
+      this.cdr.detectChanges();
+    }, 3200);
   }
 
 }

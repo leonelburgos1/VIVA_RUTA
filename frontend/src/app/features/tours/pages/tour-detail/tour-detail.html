@@ -8,6 +8,11 @@
 
 @if (!loading && tour) {
   <section class="detail-hero">
+    @if (showToast) {
+      <div class="hero-toast">
+        <strong>{{ toastMessage }}</strong>
+      </div>
+    }
     <img
       [src]="tour.image_url || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb'"
       [alt]="tour.title"
@@ -27,9 +32,22 @@
 
       <h1>{{ tour.title }}</h1>
 
-      <div class="hero-rating">
-        <lucide-angular [img]="Star" class="rating-icon"></lucide-angular>
-        {{ tour.rating }}
+      <div class="hero-actions">
+        <div class="hero-rating">
+          <lucide-angular [img]="Star" class="rating-icon"></lucide-angular>
+          {{ tour.rating }}
+        </div>
+
+        <div class="admin-actions">
+          <button class="edit-btn" type="button" (click)="openEditModal()">
+            <lucide-angular [img]="Pencil" class="action-icon"></lucide-angular>
+            Editar
+          </button>
+          <button class="delete-btn" type="button" (click)="deleteTour()">
+            <lucide-angular [img]="Trash2" class="action-icon"></lucide-angular>
+            Eliminar
+          </button>
+        </div>
       </div>
     </div>
   </section>
@@ -154,6 +172,13 @@
       </aside>
     </div>
   </section>
+
+  @if (showEditModal) {
+    <app-tour-form-modal
+      [tourToEdit]="tour"
+      (close)="closeEditModal($event)">
+    </app-tour-form-modal>
+  }
 }
 
 @if (!loading && !tour) {

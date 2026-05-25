@@ -9,15 +9,47 @@
 @if (!loading && place) {
 
   <section class="place-hero">
+    @if (showToast) {
+      <div class="hero-toast">
+        <strong>{{ toastMessage }}</strong>
+      </div>
+    }
     <img
       [src]="place.image_url || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb'"
       [alt]="place.title"
     />
     <div class="overlay"></div>
-    <button class="back-btn" (click)="goBack()">
-      <lucide-angular [img]="ChevronLeft" class="icon"></lucide-angular>
-      Volver
-    </button>
+    <div class="hero-content">
+      <button class="back-btn" (click)="goBack()">
+        <lucide-angular [img]="ChevronLeft" class="back-icon"></lucide-angular>
+        Volver
+      </button>
+
+      <div class="hero-chip">
+        <lucide-angular [img]="MapPin" class="chip-icon"></lucide-angular>
+        {{ place.location }}
+      </div>
+
+      <h1>{{ place.title }}</h1>
+
+      <div class="hero-actions">
+        <div class="hero-rating">
+          <lucide-angular [img]="Star" class="rating-icon"></lucide-angular>
+          {{ place.rating }}
+        </div>
+
+        <div class="admin-actions">
+          <button class="edit-btn" type="button" (click)="openEditModal()">
+            <lucide-angular [img]="Pencil" class="action-icon"></lucide-angular>
+            Editar
+          </button>
+          <button class="delete-btn" type="button" (click)="requestDeletePlace()">
+            <lucide-angular [img]="Trash2" class="action-icon"></lucide-angular>
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
   </section>
 
   <section class="detail-wrapper">
@@ -26,24 +58,6 @@
 
         <div class="place-tags">
           <span class="category">{{ place.category_label }}</span>
-          <span class="location-tag">
-            <lucide-angular [img]="MapPin" class="small-icon"></lucide-angular>
-            {{ place.location }}
-          </span>
-        </div>
-
-        <div class="title-row">
-          <h1>{{ place.title }}</h1>
-          <div class="admin-actions">
-            <button class="edit-btn">
-              <lucide-angular [img]="Pencil" class="action-icon"></lucide-angular>
-              Editar
-            </button>
-            <button class="delete-btn" (click)="deletePlace()">
-              <lucide-angular [img]="Trash2" class="action-icon"></lucide-angular>
-              Eliminar
-            </button>
-          </div>
         </div>
 
         <div class="rating-row">
@@ -77,7 +91,6 @@
             <lucide-angular [img]="MapPin" class="map-icon"></lucide-angular>
             <div>
               <h4>{{ place.address }}</h4>
-              <p>{{ place.location }}</p>
             </div>
           </div>
         </div>
@@ -144,6 +157,43 @@
       </aside>
     </div>
   </section>
+
+  @if (showEditModal) {
+    <app-place-form-modal
+      [placeToEdit]="place"
+      (close)="closeEditModal($event)">
+    </app-place-form-modal>
+  }
+
+  @if (showDeleteConfirm) {
+    <div class="confirm-overlay">
+      <div class="confirm-dialog">
+        <h3>¿Eliminar lugar?</h3>
+        <p>
+          Se eliminará <strong>{{ place.title }}</strong>
+          y también {{ place.tours.length }} tour{{ place.tours.length !== 1 ? 'es' : '' }}
+          asociado{{ place.tours.length !== 1 ? 's' : '' }}.
+        </p>
+        <p class="confirm-note">Esta acción no se puede deshacer.</p>
+
+        <div class="confirm-actions">
+          <button
+            type="button"
+            class="cancel-confirm-btn"
+            (click)="cancelDeletePlace()">
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="accept-confirm-btn"
+            [disabled]="isDeleting"
+            (click)="confirmDeletePlace()">
+            {{ isDeleting ? 'Eliminando...' : 'Sí, aceptar' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 
 }
 

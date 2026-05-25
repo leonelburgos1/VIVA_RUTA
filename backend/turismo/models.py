@@ -10,6 +10,7 @@ class Place(models.Model):
         ('Religious', 'Religioso'),
         ('Adventure', 'Aventura'),
         ('Culture', 'Cultura'),
+        ('Gastronomy', 'Gastronomía'),
         ('Beach', 'Playa'),
     ]
 
@@ -128,7 +129,9 @@ class Tour(models.Model):
         blank=True
     )
 
-    image_url = models.URLField(
+    image = models.ImageField(
+        upload_to='tours/',
+        null=True,
         blank=True
     )
 

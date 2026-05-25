@@ -36,6 +36,8 @@ class TourSummarySerializer(serializers.ModelSerializer):
         read_only=True
     )
 
+    image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Tour
         fields = [
@@ -50,6 +52,18 @@ class TourSummarySerializer(serializers.ModelSerializer):
             'place_name',
             'place_location',
         ]
+
+    def get_image_url(self, obj):
+
+        request = self.context.get('request')
+
+        if obj.image:
+
+            return request.build_absolute_uri(
+                obj.image.url
+            )
+
+        return None
 
 
 class PlaceSerializer(serializers.ModelSerializer):
@@ -110,6 +124,7 @@ class TourSerializer(serializers.ModelSerializer):
     )
 
     place_image_url = serializers.SerializerMethodField()
+    image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Tour
@@ -123,6 +138,18 @@ class TourSerializer(serializers.ModelSerializer):
 
             return request.build_absolute_uri(
                 obj.place.image.url
+            )
+
+        return None
+
+    def get_image_url(self, obj):
+
+        request = self.context.get('request')
+
+        if obj.image:
+
+            return request.build_absolute_uri(
+                obj.image.url
             )
 
         return None
