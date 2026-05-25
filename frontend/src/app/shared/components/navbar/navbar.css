@@ -99,18 +99,119 @@ nav a:hover {
 
   align-items: center;
 
-  gap: 20px;
+  gap: 16px;
+}
+
+.nav-actions {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+}
+
+.nav-btn {
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 0.8rem 1.1rem;
+
+  border-radius: 999px;
+
+  font-weight: 700;
+
+  font-size: 0.95rem;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.nav-btn--ghost {
+
+  border: 1px solid #d8e0d2;
+
+  color: var(--primary-dark);
+
+  background: white;
+}
+
+.nav-btn--ghost:hover {
+
+  border-color: var(--primary-green);
+
+  color: var(--primary-green);
+
+  background: #f7fbf1;
+}
+
+.nav-btn--solid {
+
+  background: var(--primary-green);
+
+  color: white;
+
+  box-shadow: 0 10px 24px rgba(106, 143, 58, 0.2);
+}
+
+.nav-btn--solid:hover {
+
+  background: #5e7931;
 }
 
 .booking-btn {
 
   background: transparent;
 
-  border: none;
+  border: 1px solid transparent;
 
   color: #334155;
 
-  font-weight: 600;
+  font-weight: 700;
+
+  padding: 0.8rem 1rem;
+
+  border-radius: 999px;
+
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.booking-btn:hover {
+
+  background: #f8fafc;
+
+  border-color: #e2e8f0;
+}
+
+.user-profile-btn {
+
+  background: transparent;
+
+  border: none;
+
+  padding: 0;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  cursor: pointer;
+
+  transition: transform 0.2s ease;
+}
+
+.user-profile-btn:hover {
+
+  transform: scale(1.03);
 }
 
 .user-avatar {
@@ -132,4 +233,11 @@ nav a:hover {
   color: white;
 
   font-size: 22px;
+}
+
+.nav-icon {
+
+  width: 22px;
+
+  height: 22px;
 }

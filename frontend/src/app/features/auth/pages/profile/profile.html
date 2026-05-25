@@ -1,0 +1,265 @@
+<section class="profile-shell">
+  <app-navbar></app-navbar>
+
+  @if (currentUser$ | async; as user) {
+    <div class="profile-card">
+      <span class="profile-role-badge">{{ user.role === 'admin' ? 'admin' : 'usuario' }}</span>
+
+      <div class="profile-header">
+        <div class="profile-avatar">
+          <lucide-angular [img]="UserRound" class="profile-icon"></lucide-angular>
+        </div>
+
+        <div class="profile-heading">
+          <p class="eyebrow">Tu cuenta</p>
+          <div class="profile-name-row">
+            <h1>{{ user.name }}</h1>
+            <div class="profile-name-actions">
+              <button
+                type="button"
+                class="icon-action-btn"
+                title="Editar"
+                aria-label="Editar usuario"
+                (click)="editProfile()"
+              >
+                <lucide-angular [img]="Pen" class="icon-action-icon"></lucide-angular>
+              </button>
+              <button
+                type="button"
+                class="icon-action-btn icon-action-btn--danger"
+                title="Eliminar"
+                aria-label="Eliminar usuario"
+                (click)="openDeleteConfirm()"
+              >
+                <lucide-angular [img]="Trash2" class="icon-action-icon"></lucide-angular>
+              </button>
+            </div>
+          </div>
+          <p class="description">
+            Revisa tus datos y administra tu sesión desde aquí.
+          </p>
+        </div>
+      </div>
+
+      <div class="profile-grid">
+        <article class="info-card">
+          <span class="info-label">Nombre completo</span>
+          <p class="info-value">{{ user.name }}</p>
+        </article>
+
+        <article class="info-card">
+          <span class="info-label">Correo electrónico</span>
+          <p class="info-value">{{ user.email }}</p>
+        </article>
+
+        <article class="info-card">
+          <span class="info-label">Teléfono</span>
+          <p class="info-value">{{ user.phone || 'No registrado' }}</p>
+        </article>
+
+        <article class="info-card">
+          <span class="info-label">Fecha de nacimiento</span>
+          <p class="info-value">{{ formatBirthDate(user.birthDate) }}</p>
+        </article>
+
+        <article class="info-card">
+          <span class="info-label">Departamento</span>
+          <p class="info-value">{{ user.department || 'No registrado' }}</p>
+        </article>
+
+        <article class="info-card">
+          <span class="info-label">Ciudad</span>
+          <p class="info-value">{{ user.city || 'No registrada' }}</p>
+        </article>
+      </div>
+
+      <div class="profile-actions">
+        <a routerLink="/" class="secondary-link">
+            Volver al inicio
+        </a>
+
+        <button
+            type="button"
+            class="logout-btn"
+            (click)="logout()"
+        >
+            Cerrar sesión
+        </button>
+    </div>
+    </div>
+
+    @if (showEditProfile) {
+      <div class="edit-modal-backdrop" role="presentation" (click)="closeEditProfile()">
+        <div class="edit-modal" role="dialog" aria-modal="true" aria-labelledby="edit-profile-title" (click)="$event.stopPropagation()">
+          <div class="edit-modal-header">
+            <div>
+              <p class="eyebrow">Editar perfil</p>
+              <h2 id="edit-profile-title">Actualiza tus datos</h2>
+            </div>
+            <button type="button" class="modal-close-btn" (click)="closeEditProfile()" aria-label="Cerrar formulario de edición">
+              ×
+            </button>
+          </div>
+
+          @if (editFeedback) {
+            <p class="edit-feedback">{{ editFeedback }}</p>
+          }
+
+          <form class="auth-form edit-form" [formGroup]="editForm" (ngSubmit)="saveProfileChanges()">
+            <div class="form-grid">
+              <div class="form-field">
+                <label for="edit-name">Nombre*</label>
+                <input id="edit-name" type="text" formControlName="name" placeholder="Tu nombre" [class.input-invalid]="showFieldError('name')" />
+                @if (showFieldError('name')) {
+                  <p class="field-error">{{ getFieldErrorMessage('name') }}</p>
+                }
+              </div>
+
+              <div class="form-field">
+                <label for="edit-email">Correo*</label>
+                <input id="edit-email" type="email" formControlName="email" placeholder="correo@ejemplo.com" [class.input-invalid]="showFieldError('email')" />
+                @if (showFieldError('email')) {
+                  <p class="field-error">{{ getFieldErrorMessage('email') }}</p>
+                }
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-field">
+                <label for="edit-current-password">Contraseña anterior*</label>
+                <input id="edit-current-password" type="password" formControlName="currentPassword" placeholder="Ingresa tu contraseña actual" autocomplete="current-password" [class.input-invalid]="showFieldError('currentPassword')" (input)="clearCurrentPasswordError()" />
+                @if (showFieldError('currentPassword')) {
+                  <p class="field-error">{{ getFieldErrorMessage('currentPassword') }}</p>
+                }
+              </div>
+
+              <div class="form-field">
+                <label for="edit-new-password">Nueva contraseña*</label>
+                <input id="edit-new-password" type="password" formControlName="newPassword" placeholder="Crea una nueva contraseña" autocomplete="new-password" [class.input-invalid]="showFieldError('newPassword')" />
+                @if (showFieldError('newPassword')) {
+                  <p class="field-error">{{ getFieldErrorMessage('newPassword') }}</p>
+                }
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-field">
+                <label for="edit-confirm-new-password">Confirmar nueva contraseña*</label>
+                <input id="edit-confirm-new-password" type="password" formControlName="confirmNewPassword" placeholder="Confirma la nueva contraseña" autocomplete="new-password" [class.input-invalid]="showConfirmPasswordError()" />
+                @if (showConfirmPasswordError()) {
+                  <p class="field-error">{{ getConfirmPasswordMessage() }}</p>
+                }
+              </div>
+
+              <div class="form-field"></div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-field">
+                <label for="edit-phone">Teléfono de contacto*</label>
+                <input id="edit-phone" type="tel" formControlName="phone" placeholder="Tu teléfono" maxlength="10" inputmode="numeric" (input)="sanitizePhoneInput($event)" [class.input-invalid]="showFieldError('phone')" />
+                @if (showFieldError('phone')) {
+                  <p class="field-error">{{ getFieldErrorMessage('phone') }}</p>
+                }
+              </div>
+
+              <div class="form-field">
+                <label for="edit-birth-date">Fecha de nacimiento*</label>
+                <div class="date-input-wrapper">
+                  <input id="edit-birth-date" type="date" formControlName="birthDate" [min]="minBirthDate" [max]="maxBirthDate" [class.input-invalid]="showFieldError('birthDate')" />
+                </div>
+                @if (showFieldError('birthDate')) {
+                  <p class="field-error">{{ getFieldErrorMessage('birthDate') }}</p>
+                }
+              </div>
+            </div>
+
+            <div class="location-section">
+              <div class="location-title">
+                <h2>Ubicación</h2>
+                <p>Selecciona primero el departamento para activar la ciudad.</p>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-field">
+                  <label for="edit-department">Departamento*</label>
+                  <input id="edit-department" type="text" formControlName="department" placeholder="Selecciona un departamento" (input)="onDepartmentInput()" [class.input-invalid]="showFieldError('department')" />
+                  @if (showFieldError('department')) {
+                    <p class="field-error">{{ getFieldErrorMessage('department') }}</p>
+                  }
+                  @if (departmentSuggestions.length) {
+                    <div class="suggestion-list">
+                      @for (department of departmentSuggestions; track department.id) {
+                        <button type="button" class="suggestion-item" (click)="onDepartmentSelect(department.nombre)">
+                          {{ department.nombre }}
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+
+                <div class="form-field">
+                  <label for="edit-city">Ciudad*</label>
+                  <input id="edit-city" type="text" formControlName="city" placeholder="Selecciona una ciudad" (input)="onCityInput()" [class.input-invalid]="showFieldError('city') || showCityDepartmentMessage()" />
+                  @if (showCityDepartmentMessage()) {
+                    <p class="field-error">{{ getCityDepartmentMessage() }}</p>
+                  }
+                  @if (citySuggestions.length) {
+                    <div class="suggestion-list">
+                      @for (city of citySuggestions; track city) {
+                        <button type="button" class="suggestion-item" (click)="onCitySelect(city)">
+                          {{ city }}
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <div class="edit-modal-actions">
+              <button type="button" class="action-btn action-btn--secondary" (click)="closeEditProfile()">
+                Cancelar
+              </button>
+              <button type="submit" class="action-btn action-btn--secondary" [disabled]="isSavingEdit">
+                {{ isSavingEdit ? 'Guardando...' : 'Guardar cambios' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+  } @else {
+    <div class="profile-card empty-state">
+      <p class="eyebrow">Tu cuenta</p>
+      <h1>No hay una sesión activa</h1>
+      <p class="description">
+        Inicia sesión para ver tu perfil y tus datos.
+      </p>
+      <div class="profile-actions">
+        <a routerLink="/login" class="primary-btn">Iniciar sesión</a>
+        <a routerLink="/registro" class="secondary-link">Registrarse</a>
+      </div>
+    </div>
+  }
+
+  @if (showDeleteConfirm) {
+    <div class="delete-modal-backdrop" role="presentation" (click)="cancelDelete()">
+      <div class="delete-modal" role="dialog" aria-modal="true" aria-labelledby="delete-account-title" (click)="$event.stopPropagation()">
+        <p id="delete-account-title" class="delete-modal-title">¿Eliminar tu cuenta?</p>
+        <p class="delete-modal-description">
+          Al eliminar tu cuenta, perderás tus datos y también tus reservas asociadas.
+          Esta acción no se puede deshacer.
+        </p>
+        <div class="delete-modal-actions">
+          <button type="button" class="action-btn action-btn--secondary" (click)="cancelDelete()">
+            Cancelar
+          </button>
+          <button type="button" class="action-btn action-btn--danger" (click)="confirmDelete()">
+            Sí, eliminar cuenta
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</section>
