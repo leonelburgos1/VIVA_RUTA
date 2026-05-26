@@ -13,6 +13,7 @@ import { PlaceCard } from '../../../../shared/components/place-card/place-card';
 import { PlaceService } from '../../services/place.service';
 import { Place } from '../../../../core/models/place.model';
 import { PlaceFormModal } from '../../components/place-form-modal/place-form-modal';
+import { AuthService } from '../../../auth/services/auth.service';
 
 
 @Component({
@@ -31,6 +32,7 @@ import { PlaceFormModal } from '../../components/place-form-modal/place-form-mod
 export class Places implements OnInit {
 
   private placeService = inject(PlaceService);
+  private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
 
   places: Place[] = [];
@@ -70,7 +72,14 @@ export class Places implements OnInit {
   }
 
   openCreateModal(): void {
+    if (!this.isAdmin) {
+      return;
+    }
     this.showCreateModal = true;
+  }
+
+  get isAdmin(): boolean {
+    return this.authService.isAdmin;
   }
 
   closeCreateModal(event: { reload: boolean; message?: string }): void {

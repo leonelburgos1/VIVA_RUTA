@@ -21,14 +21,33 @@
     </a>
   </nav>
   <div class="right-section">
-    <button class="booking-btn">
-      Mis Reservas
-    </button>
-    <div class="user-avatar">
-      <lucide-angular
-        [img]="UserRound"
-        class="nav-icon">
-      </lucide-angular>
-    </div>
+    @if (currentUser$ | async; as user) {
+      <button class="booking-btn" type="button" [routerLink]="['/reservas']">
+        Mis Reservas
+      </button>
+
+      <button
+        class="user-profile-btn"
+        type="button"
+        [routerLink]="['/perfil']"
+        [attr.title]="'Ver perfil de ' + user.name"
+      >
+        <span class="user-avatar" aria-hidden="true">
+          <lucide-angular
+            [img]="UserRound"
+            class="nav-icon">
+          </lucide-angular>
+        </span>
+      </button>
+    } @else {
+      <div class="nav-actions">
+        <a class="nav-btn nav-btn--ghost" routerLink="/registro">
+          Registrarse
+        </a>
+        <a class="nav-btn nav-btn--solid" routerLink="/login">
+          Acceder
+        </a>
+      </div>
+    }
   </div>
 </header>

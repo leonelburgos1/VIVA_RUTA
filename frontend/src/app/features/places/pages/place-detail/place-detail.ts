@@ -25,6 +25,7 @@ import {
 
 import { PlaceService } from '../../services/place.service';
 import { Place } from '../../../../core/models/place.model';
+import { AuthService } from '../../../auth/services/auth.service';
 import { PlaceFormModal } from '../../components/place-form-modal/place-form-modal';
 
 
@@ -63,6 +64,7 @@ export class PlaceDetail implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private placeService = inject(PlaceService);
+  private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
 
   ngOnInit(): void {
@@ -85,6 +87,9 @@ export class PlaceDetail implements OnInit {
   }
 
   openEditModal(): void {
+    if (!this.isAdmin) {
+      return;
+    }
     this.showEditModal = true;
   }
 
@@ -98,7 +103,7 @@ export class PlaceDetail implements OnInit {
   }
 
   requestDeletePlace(): void {
-    if (!this.place) return;
+    if (!this.place || !this.isAdmin) return;
 
     this.showDeleteConfirm = true;
   }
@@ -112,7 +117,7 @@ export class PlaceDetail implements OnInit {
   }
 
   confirmDeletePlace(): void {
-    if (!this.place) return;
+    if (!this.place || !this.isAdmin) return;
 
     this.isDeleting = true;
 
@@ -142,6 +147,10 @@ export class PlaceDetail implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  get isAdmin(): boolean {
+    return this.authService.isAdmin;
   }
 
   private openToast(message: string): void {

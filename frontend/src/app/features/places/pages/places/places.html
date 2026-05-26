@@ -15,9 +15,11 @@
 
 <section class="places-container">
   <div class="top-actions">
-    <button class="create-btn" (click)="openCreateModal()">
-      + Crear Lugar
-    </button>
+    @if (isAdmin) {
+      <button class="create-btn" (click)="openCreateModal()">
+        + Crear Lugar
+      </button>
+    }
   </div>
 
   <app-search-filters
@@ -44,7 +46,6 @@
       <p class="empty-state">No encontramos lugares con esos filtros.</p>
     } @else {
       @for (place of filteredPlaces; track place.id) {
-      <!-- ✅ usa image_url (URL absoluta) y slug para navegar -->
         <app-place-card
           [id]="place.id"
           [slug]="place.slug"

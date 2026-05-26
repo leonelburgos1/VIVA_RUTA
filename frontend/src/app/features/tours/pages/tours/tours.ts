@@ -18,6 +18,7 @@ import { TourCard } from '../../../../shared/components/tour-card/tour-card';
 import { TourFormModal } from '../../components/tour-form-modal/tour-form-modal';
 import { TourService } from '../../services/tour.service';
 import { Tour } from '../../../../core/models/tour.model';
+import { AuthService } from '../../../auth/services/auth.service';
 
 @Component({
   selector: 'app-tours',
@@ -36,6 +37,7 @@ import { Tour } from '../../../../core/models/tour.model';
 export class Tours implements OnInit {
 
   private tourService = inject(TourService);
+  private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
 
   readonly Plus = Plus;
@@ -97,7 +99,14 @@ export class Tours implements OnInit {
   }
 
   openCreateModal(): void {
+    if (!this.isAdmin) {
+      return;
+    }
     this.showCreateModal = true;
+  }
+
+  get isAdmin(): boolean {
+    return this.authService.isAdmin;
   }
 
   closeCreateModal(event: { reload: boolean; message?: string }): void {

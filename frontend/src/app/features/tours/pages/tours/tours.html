@@ -15,12 +15,14 @@
 
 <section class="tours-container">
   <div class="top-actions">
-    <button
-      class="create-btn"
-      (click)="openCreateModal()">
-      <lucide-angular [img]="Plus" class="btn-icon"></lucide-angular>
-      Crear Tour
-    </button>
+    @if (isAdmin) {
+      <button
+        class="create-btn"
+        (click)="openCreateModal()">
+        <lucide-angular [img]="Plus" class="btn-icon"></lucide-angular>
+        Crear Tour
+      </button>
+    }
   </div>
 
   <app-search-filters

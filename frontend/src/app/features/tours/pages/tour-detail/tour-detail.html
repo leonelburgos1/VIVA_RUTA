@@ -38,16 +38,18 @@
           {{ tour.rating }}
         </div>
 
-        <div class="admin-actions">
-          <button class="edit-btn" type="button" (click)="openEditModal()">
-            <lucide-angular [img]="Pencil" class="action-icon"></lucide-angular>
-            Editar
-          </button>
-          <button class="delete-btn" type="button" (click)="deleteTour()">
-            <lucide-angular [img]="Trash2" class="action-icon"></lucide-angular>
-            Eliminar
-          </button>
-        </div>
+        @if (isAdmin) {
+          <div class="admin-actions">
+            <button class="edit-btn" type="button" (click)="openEditModal()">
+              <lucide-angular [img]="Pencil" class="action-icon"></lucide-angular>
+              Editar
+            </button>
+            <button class="delete-btn" type="button" (click)="deleteTour()">
+              <lucide-angular [img]="Trash2" class="action-icon"></lucide-angular>
+              Eliminar
+            </button>
+          </div>
+        }
       </div>
     </div>
   </section>
@@ -162,8 +164,13 @@
           </div>
         </div>
 
-        <button class="reserve-btn" type="button">
-          Reservar ahora
+        <button
+          class="reserve-btn"
+          type="button"
+          [disabled]="!canBook || bookingCreating"
+          (click)="reserveNow()"
+        >
+          {{ canBook ? (bookingCreating ? 'Reservando...' : 'Reservar ahora') : 'Inicia sesión para reservar' }}
         </button>
 
         <p class="booking-note">

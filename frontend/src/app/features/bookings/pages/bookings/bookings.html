@@ -1,0 +1,152 @@
+<app-navbar />
+
+<div class="bookings-page">
+
+  <div class="page-header">
+    <h1 class="page-title">Mis Reservas</h1>
+    <p class="page-subtitle">Gestiona y revisa todas tus reservas de tours</p>
+  </div>
+
+  <!-- ── Contadores ── -->
+  <div class="stats-grid">
+
+    <div class="stat-card stat-pending">
+      <div class="stat-icon-wrap pending-bg">
+        <lucide-angular [img]="Clock" class="stat-icon"></lucide-angular>
+      </div>
+      <div class="stat-number">{{ pendingCount }}</div>
+      <div class="stat-label">Pendientes</div>
+    </div>
+
+    <div class="stat-card stat-confirmed">
+      <div class="stat-icon-wrap confirmed-bg">
+        <lucide-angular [img]="CheckCircle" class="stat-icon"></lucide-angular>
+      </div>
+      <div class="stat-number">{{ confirmedCount }}</div>
+      <div class="stat-label">Confirmadas</div>
+    </div>
+
+    <div class="stat-card stat-completed">
+      <div class="stat-icon-wrap completed-bg">
+        <lucide-angular [img]="Calendar" class="stat-icon"></lucide-angular>
+      </div>
+      <div class="stat-number">{{ completedCount }}</div>
+      <div class="stat-label">Completadas</div>
+    </div>
+
+    <div class="stat-card stat-cancelled">
+      <div class="stat-icon-wrap cancelled-bg">
+        <lucide-angular [img]="XCircle" class="stat-icon"></lucide-angular>
+      </div>
+      <div class="stat-number">{{ cancelledCount }}</div>
+      <div class="stat-label">Canceladas</div>
+    </div>
+
+  </div>
+
+  <!-- ── Estado de carga ── -->
+  @if (loading) {
+    <div class="loading-state">
+      <p>Cargando reservas...</p>
+    </div>
+  }
+
+  <!-- ── Sin reservas ── -->
+  @if (!loading && bookings.length === 0) {
+    <div class="empty-state">
+      <lucide-angular [img]="Calendar" class="empty-icon"></lucide-angular>
+      <h3>No tienes reservas aún</h3>
+      <p>Explora los tours disponibles y haz tu primera reserva.</p>
+      <a routerLink="/tours" class="explore-btn">Explorar Tours</a>
+    </div>
+  }
+
+  <!-- ── Lista de reservas ── -->
+  @for (booking of bookings; track booking.id) {
+
+    <div class="booking-card">
+
+      <!-- Imagen del tour -->
+      <div class="booking-image-wrap">
+        <img
+          [src]="booking.tour_image_url || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=400&q=80'"
+          [alt]="booking.tour_title"
+          class="booking-image"
+          (error)="getFallbackImage($event)"
+        />
+      </div>
+
+      <!-- Info principal -->
+      <div class="booking-info">
+
+        <div class="booking-top">
+          <span class="status-badge" [class]="'status-' + booking.status">
+            {{ getStatusLabel(booking.status) }}
+          </span>
+          <span class="booking-ref">Reserva #{{ booking.id }}</span>
+        </div>
+
+        <h2 class="booking-title">{{ booking.tour_title }}</h2>
+
+        <div class="booking-meta">
+
+          <div class="meta-item">
+            <lucide-angular [img]="MapPin" class="meta-icon"></lucide-angular>
+            <span>{{ booking.tour_place_name }}</span>
+          </div>
+
+          <div class="meta-item">
+            <lucide-angular [img]="Calendar" class="meta-icon"></lucide-angular>
+            <span>{{ booking.date | date:'EEEE, d \'de\' MMMM \'de\' y':'':'es' }}</span>
+          </div>
+
+          <div class="meta-item">
+            <lucide-angular [img]="Users" class="meta-icon"></lucide-angular>
+            <span>{{ booking.guests }} persona{{ booking.guests !== 1 ? 's' : '' }}</span>
+          </div>
+
+          <div class="meta-item">
+            <lucide-angular [img]="Clock3" class="meta-icon"></lucide-angular>
+            <span>{{ booking.tour_duration }}</span>
+          </div>
+
+        </div>
+
+        <div class="booking-price">
+          Total pagado: <strong>${{ booking.total_price | number }}</strong>
+        </div>
+
+      </div>
+
+      <!-- Acciones -->
+      <div class="booking-actions">
+
+        <a
+          [routerLink]="['/tours', booking.tour_slug]"
+          class="action-btn btn-primary">
+          Ver tour
+        </a>
+
+        <button
+          class="action-btn btn-outline"
+          type="button"
+          disabled>
+          Modificar
+        </button>
+
+        @if (booking.status !== 'cancelled' && booking.status !== 'completed') {
+          <button
+            class="action-btn btn-danger"
+            type="button"
+            (click)="cancel(booking)">
+            Cancelar
+          </button>
+        }
+
+      </div>
+
+    </div>
+
+  }
+
+</div>

@@ -66,21 +66,47 @@ export class TourFormModal implements OnChanges {
   priceDisplay = '';
   isSubmitting = false;
 
+  // ✅ CORREGIDO: los validators son arrow functions para preservar el contexto `this`
+  // Con funciones normales (private timeValidator) Angular llama al validator sin contexto
+  // y `this` es undefined, causando "Cannot read properties of undefined (reading 'isValidTimeValue')"
+
+  private readonly timeValidatorFn = (control: AbstractControl): ValidationErrors | null => {
+    const value = String(control.value ?? '').trim();
+    if (!value) return null;
+    if (!this.isValidTimeValue(value)) return { invalidTime: true };
+    return null;
+  };
+
+  private readonly scheduleOrderValidatorFn = (control: AbstractControl): ValidationErrors | null => {
+    const departureTime   = String(control.get('departure_time')?.value   ?? '').trim();
+    const departurePeriod = String(control.get('departure_period')?.value ?? '').trim();
+    const returnTime      = String(control.get('return_time')?.value      ?? '').trim();
+    const returnPeriod    = String(control.get('return_period')?.value    ?? '').trim();
+
+    if (!departureTime || !departurePeriod || !returnTime || !returnPeriod) return null;
+    if (!this.isValidTimeValue(departureTime) || !this.isValidTimeValue(returnTime)) return null;
+
+    const dep = this.toComparableMinutes(departureTime, departurePeriod);
+    const ret = this.toComparableMinutes(returnTime, returnPeriod);
+
+    return ret <= dep ? { invalidScheduleOrder: true } : null;
+  };
+
   tourForm: FormGroup = this.fb.group({
-    title: ['', Validators.required],
-    place: ['', Validators.required],
-    description: ['', Validators.required],
-    price: ['', [Validators.required, Validators.min(1)]],
-    duration: ['', Validators.required],
-    max_spots: [1, [Validators.required, Validators.min(1)]],
-    departure_time: ['', [Validators.required, this.timeValidator]],
+    title:            ['', Validators.required],
+    place:            ['', Validators.required],
+    description:      ['', Validators.required],
+    price:            ['', [Validators.required, Validators.min(1)]],
+    duration:         ['', Validators.required],
+    max_spots:        [1,  [Validators.required, Validators.min(1)]],
+    departure_time:   ['', [Validators.required, this.timeValidatorFn]],
     departure_period: ['AM', Validators.required],
-    return_time: ['', [Validators.required, this.timeValidator]],
-    return_period: ['PM', Validators.required],
-    includes: ['', Validators.required],
-    image: [null, Validators.required]
+    return_time:      ['', [Validators.required, this.timeValidatorFn]],
+    return_period:    ['PM', Validators.required],
+    includes:         ['', Validators.required],
+    image:            [null, Validators.required]
   }, {
-    validators: [this.scheduleOrderValidator]
+    validators: [this.scheduleOrderValidatorFn]
   });
 
   constructor() {
@@ -104,12 +130,8 @@ export class TourFormModal implements OnChanges {
 
   private loadPlaces(): void {
     this.placeService.getPlaces().subscribe({
-      next: (places) => {
-        this.places = places;
-      },
-      error: (error) => {
-        console.error('Error cargando lugares para el tour:', error);
-      }
+      next: (places) => { this.places = places; },
+      error: (error) => { console.error('Error cargando lugares:', error); }
     });
   }
 
@@ -122,38 +144,25 @@ export class TourFormModal implements OnChanges {
       ? new Intl.NumberFormat('es-CO').format(Number(rawValue))
       : '';
 
-    this.tourForm.patchValue(
-      { price: numericValue },
-      { emitEvent: false }
-    );
+    this.tourForm.patchValue({ price: numericValue }, { emitEvent: false });
   }
 
   onMaxSpotsInput(event: Event): void {
     const input = event.target as HTMLInputElement;
     const numericValue = Math.max(0, Number(input.value || 0));
-
     input.value = String(numericValue);
-    this.tourForm.patchValue(
-      { max_spots: numericValue },
-      { emitEvent: false }
-    );
+    this.tourForm.patchValue({ max_spots: numericValue }, { emitEvent: false });
   }
 
   onTimeInput(controlName: 'departure_time' | 'return_time', event: Event): void {
     const input = event.target as HTMLInputElement;
     const digits = input.value.replace(/\D/g, '').slice(0, 4);
-
-    let formattedValue = digits;
-
-    if (digits.length > 2) {
-      formattedValue = `${digits.slice(0, 2)}:${digits.slice(2)}`;
-    }
+    const formattedValue = digits.length > 2
+      ? `${digits.slice(0, 2)}:${digits.slice(2)}`
+      : digits;
 
     input.value = formattedValue;
-    this.tourForm.patchValue(
-      { [controlName]: formattedValue },
-      { emitEvent: false }
-    );
+    this.tourForm.patchValue({ [controlName]: formattedValue }, { emitEvent: false });
     this.tourForm.get(controlName)?.updateValueAndValidity();
   }
 
@@ -173,9 +182,9 @@ export class TourFormModal implements OnChanges {
 
     if (this.tourForm.invalid || requiresImage) {
       this.tourForm.markAllAsTouched();
-      this.tourForm.get('image')?.setErrors(
-        requiresImage ? { required: true } : null
-      );
+      if (requiresImage) {
+        this.tourForm.get('image')?.setErrors({ required: true });
+      }
       return;
     }
 
@@ -185,19 +194,20 @@ export class TourFormModal implements OnChanges {
       .filter((item: string) => item.length > 0);
 
     const departureTime = `${this.tourForm.value.departure_time} ${this.tourForm.value.departure_period}`;
-    const returnTime = `${this.tourForm.value.return_time} ${this.tourForm.value.return_period}`;
-    const schedule = `Salida ${departureTime} - Retorno ${returnTime}`;
+    const returnTime    = `${this.tourForm.value.return_time} ${this.tourForm.value.return_period}`;
+    const schedule      = `Salida ${departureTime} - Retorno ${returnTime}`;
 
     const formData = new FormData();
-    formData.append('title', this.tourForm.value.title || '');
-    formData.append('place', String(Number(this.tourForm.value.place)));
+    formData.append('title',       this.tourForm.value.title       || '');
+    formData.append('place',       String(Number(this.tourForm.value.place)));
     formData.append('description', this.tourForm.value.description || '');
-    formData.append('price', String(Number(this.tourForm.value.price)));
-    formData.append('duration', this.tourForm.value.duration || '');
-    formData.append('max_spots', String(Number(this.tourForm.value.max_spots)));
-    formData.append('schedule', schedule);
-    formData.append('includes', JSON.stringify(includes));
-    formData.append('rating', '4.8');
+    formData.append('price',       String(Number(this.tourForm.value.price)));
+    formData.append('duration',    this.tourForm.value.duration    || '');
+    formData.append('max_spots',   String(Number(this.tourForm.value.max_spots)));
+    formData.append('schedule',    schedule);
+    formData.append('includes',    JSON.stringify(includes));
+    formData.append('rating',      '4.8');
+
     if (this.selectedFile) {
       formData.append('image', this.selectedFile);
     }
@@ -213,9 +223,7 @@ export class TourFormModal implements OnChanges {
         this.isSubmitting = false;
         this.close.emit({
           reload: true,
-          message: this.isEditMode
-            ? 'Tour actualizado con éxito'
-            : 'Tour registrado con éxito'
+          message: this.isEditMode ? 'Tour actualizado con éxito' : 'Tour registrado con éxito'
         });
       },
       error: (error) => {
@@ -228,8 +236,7 @@ export class TourFormModal implements OnChanges {
   hasError(controlName: string): boolean {
     const control = this.tourForm.get(controlName);
     const hasCrossError = (
-      controlName === 'return_time' ||
-      controlName === 'return_period'
+      controlName === 'return_time' || controlName === 'return_period'
     ) && !!this.tourForm.errors?.['invalidScheduleOrder'];
 
     return !!control && (
@@ -240,31 +247,20 @@ export class TourFormModal implements OnChanges {
 
   getErrorMessage(controlName: string): string {
     const control = this.tourForm.get(controlName);
-    const hasScheduleOrderError = (
-      controlName === 'return_time' || controlName === 'return_period'
-    ) && !!this.tourForm.errors?.['invalidScheduleOrder'];
 
-    if (hasScheduleOrderError) {
+    if (
+      (controlName === 'return_time' || controlName === 'return_period') &&
+      !!this.tourForm.errors?.['invalidScheduleOrder']
+    ) {
       return 'La hora de retorno debe ser después de la hora de salida.';
     }
 
-    if (!control?.errors) {
-      return '';
-    }
-
-    if (control.errors['required']) {
-      return 'Este campo es obligatorio.';
-    }
-
-    if (control.errors['min']) {
-      return controlName === 'max_spots'
-        ? 'Los cupos deben ser mayores a 0.'
-        : 'El valor debe ser mayor a 0.';
-    }
-
-    if (control.errors['invalidTime']) {
-      return 'Usa el formato 00:00 con una hora válida.';
-    }
+    if (!control?.errors) return '';
+    if (control.errors['required'])     return 'Este campo es obligatorio.';
+    if (control.errors['min'])          return controlName === 'max_spots'
+                                          ? 'Los cupos deben ser mayores a 0.'
+                                          : 'El valor debe ser mayor a 0.';
+    if (control.errors['invalidTime'])  return 'Usa el formato 00:00 con una hora válida.';
 
     return 'Revisa este campo.';
   }
@@ -275,95 +271,44 @@ export class TourFormModal implements OnChanges {
   }
 
   closeModal(): void {
-    if (this.isSubmitting) {
-      return;
-    }
-
+    if (this.isSubmitting) return;
     this.close.emit({ reload: false });
   }
 
-  private timeValidator(control: AbstractControl): ValidationErrors | null {
-    const value = String(control.value || '').trim();
+  // ── Helpers privados ──────────────────────────────────────────────────
 
-    if (!value) {
-      return null;
-    }
-
-    if (!this.isValidTimeValue(value)) {
-      return { invalidTime: true };
-    }
-
-    return null;
-  }
-
-  private scheduleOrderValidator(control: AbstractControl): ValidationErrors | null {
-    const departureTime = String(control.get('departure_time')?.value || '').trim();
-    const departurePeriod = String(control.get('departure_period')?.value || '').trim();
-    const returnTime = String(control.get('return_time')?.value || '').trim();
-    const returnPeriod = String(control.get('return_period')?.value || '').trim();
-
-    if (!departureTime || !departurePeriod || !returnTime || !returnPeriod) {
-      return null;
-    }
-
-    if (
-      !this.isValidTimeValue(departureTime) ||
-      !this.isValidTimeValue(returnTime)
-    ) {
-      return null;
-    }
-
-    const departureMinutes = this.toComparableMinutes(departureTime, departurePeriod);
-    const returnMinutes = this.toComparableMinutes(returnTime, returnPeriod);
-
-    if (returnMinutes <= departureMinutes) {
-      return { invalidScheduleOrder: true };
-    }
-
-    return null;
+  private isValidTimeValue(value: string): boolean {
+    const match = /^(\d{2}):(\d{2})$/.exec(value);
+    if (!match) return false;
+    const hours   = Number(match[1]);
+    const minutes = Number(match[2]);
+    return hours >= 1 && hours <= 12 && minutes >= 0 && minutes <= 59;
   }
 
   private toComparableMinutes(time: string, period: string): number {
     const [hoursText, minutesText] = time.split(':');
     let hours = Number(hoursText);
     const minutes = Number(minutesText);
-
-    if (period === 'PM') {
-      hours += 12;
-    }
-
-    return (hours * 60) + minutes;
-  }
-
-  private isValidTimeValue(value: string): boolean {
-    const match = /^(\d{2}):(\d{2})$/.exec(value);
-
-    if (!match) {
-      return false;
-    }
-
-    const hours = Number(match[1]);
-    const minutes = Number(match[2]);
-
-    return hours >= 1 && hours <= 12 && minutes >= 0 && minutes <= 59;
+    if (period === 'PM') hours += 12;
+    return hours * 60 + minutes;
   }
 
   private patchForm(tour: Tour): void {
-    const { time, period } = this.splitSchedulePart(tour.schedule, 'Salida');
-    const returnData = this.splitSchedulePart(tour.schedule, 'Retorno');
+    const dep = this.splitSchedulePart(tour.schedule, 'Salida');
+    const ret = this.splitSchedulePart(tour.schedule, 'Retorno');
 
     this.tourForm.patchValue({
-      title: tour.title,
-      place: String(tour.place),
-      description: tour.description,
-      price: tour.price,
-      duration: tour.duration,
-      max_spots: tour.max_spots,
-      departure_time: this.normalizeTimeValue(time),
-      departure_period: period,
-      return_time: this.normalizeTimeValue(returnData.time),
-      return_period: returnData.period,
-      includes: (tour.includes || []).join(', ')
+      title:            tour.title,
+      place:            String(tour.place),
+      description:      tour.description,
+      price:            tour.price,
+      duration:         tour.duration,
+      max_spots:        tour.max_spots,
+      departure_time:   this.normalizeTimeValue(dep.time),
+      departure_period: dep.period,
+      return_time:      this.normalizeTimeValue(ret.time),
+      return_period:    ret.period,
+      includes:         (tour.includes || []).join(', ')
     });
 
     this.priceDisplay = new Intl.NumberFormat('es-CO').format(tour.price);
@@ -374,23 +319,21 @@ export class TourFormModal implements OnChanges {
     this.tourForm.get('image')?.updateValueAndValidity();
   }
 
-  private splitSchedulePart(schedule: string, label: 'Salida' | 'Retorno'): { time: string; period: string } {
+  private splitSchedulePart(
+    schedule: string,
+    label: 'Salida' | 'Retorno'
+  ): { time: string; period: string } {
     const regex = new RegExp(`${label}\\s(\\d{1,2}:\\d{2})\\s(AM|PM)`);
     const match = schedule.match(regex);
-
     return {
-      time: match?.[1] ?? '',
+      time:   match?.[1] ?? '',
       period: match?.[2] ?? (label === 'Salida' ? 'AM' : 'PM')
     };
   }
 
   private normalizeTimeValue(value: string): string {
-    const [hoursText = '', minutesText = ''] = value.split(':');
-
-    if (!hoursText || !minutesText) {
-      return value;
-    }
-
-    return `${hoursText.padStart(2, '0')}:${minutesText}`;
+    const [h = '', m = ''] = value.split(':');
+    if (!h || !m) return value;
+    return `${h.padStart(2, '0')}:${m}`;
   }
 }
